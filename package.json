@@ -1,0 +1,30 @@
+{
+  "name": "postgres_informix_updater",
+  "version": "1.0.0",
+  "description": "Listens to DML triggers from the postgres database and updates the corresponding informix database",
+  "scripts": {
+    "test": "mocha ./test/*.test.js --exit",
+    "lint": "standard --env mocha",
+    "lint:fix": "standard --env mocha --fix",
+    "producer": "node ./src/producer.js",
+    "consumer": "node ./src/consumer.js",
+    "start": "npm run producer & npm run consumer"
+  },
+  "author": "Topcoder",
+  "license": "ISC",
+  "dependencies": {
+    "config": "^3.2.2",
+    "informix-wrapper": "git+https://github.com/appirio-tech/informix-wrapper.git",
+    "no-kafka": "^3.4.3",
+    "pg": "^7.12.1",
+    "standard": "^13.1.0",
+    "underscore": "^1.9.1",
+    "winston": "^3.2.1",
+    "lodash": "^4.17.15",
+    "topcoder-bus-api-wrapper": "^1.0.1"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0"
+  }
+}
