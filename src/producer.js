@@ -12,6 +12,9 @@ const pgOptions = config.get('POSTGRES')
 const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
 const pgClient = new pg.Client(pgConnectionString)
 
+const express = require('express')
+const app = express()
+const port = 3000
 
 
 const busApiClient = busApi(_.pick(config,
@@ -72,3 +75,9 @@ async function run () {
 }
 
 run()
+
+app.get('/health', (req, res) => {
+        //console.log('pgClient', pgClient)
+        res.send('ok')
+})
+app.listen(port, () => console.log(`Example app listening on port ${port}!`))
