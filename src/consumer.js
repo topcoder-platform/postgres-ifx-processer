@@ -18,6 +18,20 @@ const consumer = new Kafka.SimpleConsumer({
   })
 })
 
+
+  const check = function () {
+    if (!consumer.client.initialBrokers && !consumer.client.initialBrokers.length) {
+      return false;
+    }
+    let connected = true;
+    consumer.client.initialBrokers.forEach(conn => {
+      logger.debug(`url ${conn.server()} - connected=${conn.connected}`);
+      connected = conn.connected & connected;
+    });
+    return connected;
+  };
+
+
 const terminate = () => process.exit()
 
 /**
@@ -91,6 +105,7 @@ async function setupKafkaConsumer () {
     await consumer.init()
     await consumer.subscribe(kafkaOptions.topic, kafkaOptions.partition, { time: Kafka.LATEST_OFFSET }, dataHandler)
     logger.info('Initialized kafka consumer')
+    healthcheck.init([check])
   } catch (err) {
     logger.error('Could not setup kafka consumer')
     logger.logFullError(err)
