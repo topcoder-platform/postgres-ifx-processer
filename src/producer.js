@@ -16,12 +16,10 @@ const express = require('express')
 const app = express()
 const port = 3000
 
-
 const busApiClient = busApi(_.pick(config,
         ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME',
                 'AUTH0_CLIENT_ID', 'AUTH0_CLIENT_SECRET', 'BUSAPI_URL',
                 'KAFKA_ERROR_TOPIC', 'AUTH0_PROXY_SERVER_URL']))
-
 busApiClient
         .getHealth()
         .then(result => console.log(result.body, result.status))
@@ -78,6 +76,6 @@ run()
 
 app.get('/health', (req, res) => {
         //console.log('pgClient', pgClient)
-        res.send('ok')
+        res.send('health ok')
 })
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))

@@ -5,7 +5,7 @@ const config = require('config')
 const Kafka = require('no-kafka')
 const logger = require('./common/logger')
 const informix = require('./common/informixWrapper.js')
-
+const healthcheck = require('topcoder-healthcheck-dropin');
 const kafkaOptions = config.get('KAFKA')
 const isSslEnabled = kafkaOptions.SSL && kafkaOptions.SSL.cert && kafkaOptions.SSL.key
 const consumer = new Kafka.SimpleConsumer({
@@ -63,8 +63,6 @@ async function updateInformix (payload) {
       break
     case 'delete':
       {
-       // const columns = payload.data
-        //const primaryKey = payload.Uniquecolumn
         sql = `delete from ${payload.payload.schema}:${payload.payload.table} where ${primaryKey}=${columns[primaryKey]};` // ""delete from <schema>:<table> where primary_key_col=primary_key_val"
       }
       break

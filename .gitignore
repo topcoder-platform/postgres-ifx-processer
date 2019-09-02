@@ -2,4 +2,5 @@
 node_modules
 *.log
 env_producer.sh
+package-lock.json
 env_consumer.sh
