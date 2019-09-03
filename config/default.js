@@ -29,8 +29,8 @@ module.exports = {
   KAFKA: { // Kafka connection options
     brokers_url: process.env.KAFKA_URL || 'localhost:9092', // comma delimited list of initial brokers list
     SSL: {
-      cert: process.env.KAFKA_SSL_CERT || null, // SSL client certificate file path
-      key: process.env.KAFKA_SSL_KEY || null // SSL client key file path
+      cert: process.env.KAFKA_CLIENT_CERT || null, // SSL client certificate file path
+      key: process.env.KAFKA_CLIENT_CERT_KEY || null // SSL client key file path
     },
     topic: process.env.KAFKA_TOPIC || 'db.postgres.sync', // Kafka topic to push and receive messages
     partition: process.env.partition || [0] // Kafka partitions to use
