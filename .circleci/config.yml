@@ -23,13 +23,10 @@ restore_cache_settings_for_build: &restore_cache_settings_for_build
   key: docker-pg-ifx-notify-{{ checksum "package-lock.json" }}
 
 save_cache_settings: &save_cache_settings
-  key: docker-pg-ifx-notifyy-{{ checksum "package-lock.json" }}
+  key: docker-pg-ifx-notify-{{ checksum "package-lock.json" }}
   paths:
     - node_modules
 
-run_build: &run_build
-          name: Build of Docker image
-          command: ./build.sh
 
 build_steps: &build_steps
       - checkout
