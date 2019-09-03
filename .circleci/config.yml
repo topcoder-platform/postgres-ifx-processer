@@ -1,7 +1,8 @@
 version: 2
 defaults: &defaults
     docker:
-      - image: docker:17.06.1-ce-git
+            #- image: docker:17.06.1-ce-git
+      - image: circleci/node:latest
 install_dependency: &install_dependency
           name: Installation of build and deployment dependencies.
           command: |
