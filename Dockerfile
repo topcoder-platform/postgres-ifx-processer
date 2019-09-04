@@ -7,4 +7,4 @@ COPY . .
 
 RUN npm install
 #RUN npm install dotenv --save
-ENTRYPOINT["npm","run"]
+ENTRYPOINT ["npm","run"]
