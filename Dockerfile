@@ -1,11 +1,10 @@
+FROM openjdk:11.0.3-jdk-stretch
 
-FROM node:8.2.1
-LABEL app="pg-ifx-notify" version="1.0"
+RUN apt-get update && wget -qO- https://deb.nodesource.com/setup_8.x | bash - && apt-get install -y nodejs libpq-dev g++ make
 
 WORKDIR /opt/app
 COPY . .
 
-RUN sudo -E npm install
-RUN npm install dotenv --save
-#ENTRYPOINT ["/bin/bash" , "-c", "source ./env_producer.sh && printenv"]
-ENTRYPOINT ["npm","run"]
+RUN npm install
+#RUN npm install dotenv --save
+ENTRYPOINT["npm","run"]
