@@ -34,7 +34,7 @@ build_steps: &build_steps
       - run: *install_dependency
       - run: *install_deploysuite
       - restore_cache: *restore_cache_settings_for_build
-      - run: docker build -t postgres-ifx-processor:${DEPLOY_ENV}.${CIRCLE_BUILD_NUM} .
+      - run: docker build -t postgres-ifx-processor:latest .
       - save_cache: *save_cache_settings
       - deploy:
           name: Running MasterScript.
