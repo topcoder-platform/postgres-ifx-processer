@@ -64,6 +64,11 @@ CREATE TRIGGER "scorecard_trigger"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger('scorecard_id', 'scorecard_status_id', 'scorecard_type_id', 'project_category_id', 'name', 'version', 'min_score', 'max_score', 'create_user', 'create_date', 'modify_user', 'modify_date', 'version_number');
 
+CREATE TRIGGER "default_scorecard_trigger"
+  AFTER INSERT OR DELETE OR UPDATE ON default_scorecard
+  FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger('project_category_id','scorecard_type_id', 'scorecard_id','create_user', 'create_date', 'modify_user', 'modify_date');
+
 CREATE TRIGGER "scorecard_group_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON scorecard_group
   FOR EACH ROW
