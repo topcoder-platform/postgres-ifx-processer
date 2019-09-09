@@ -17,7 +17,7 @@ module.exports = {
     timeout: parseInt(process.env.TIMEOUT, 10) || 30000
   },
   POSTGRES: { // Postgres connection options
-    user: process.env.PG_USER || 'mayur',
+    user: process.env.PG_USER || 'pg_user',
     host: process.env.PG_HOST || 'localhost',
     database: process.env.PG_DATABASE || 'postgres', // database must exist before running the tool
     password: process.env.PG_PASSWORD || 'password',
