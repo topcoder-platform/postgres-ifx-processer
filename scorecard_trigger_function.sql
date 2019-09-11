@@ -10,6 +10,7 @@ DECLARE
   column_value TEXT;
   payload_items TEXT[];
   uniquecolumn TEXT;
+  logtime TEXT;
 BEGIN
   -- Set record row depending on operation
   CASE TG_OP
@@ -26,8 +27,30 @@ BEGIN
     EXECUTE format('SELECT $1.%I::TEXT', column_name)
     INTO column_value
     USING rec;
+   case 
+    when 
+    column_name = 'upload_document' then 
+         --  RAISE NOTICE 'upload_document boolean';
+         if column_value = 'false' then
+                column_value = '0';
+        else
+                column_value = '1';
+        end if;
+    when
+    column_name = 'upload_document_required' then
+         -- RAISE NOTICE 'upload_document_required boolean';
+        if column_value = 'false' then
+                column_value = '0';
+        else
+                column_value = '1';     
+        end if;
+    else
+    -- RAISE NOTICE ' not boolean';
+    end case;
     payload_items := array_append(payload_items, '"' || replace(column_name, '"', '\"') || '":"' || replace(column_value, '"', '\"') || '"');
   END LOOP;
+  --logtime := (select date_display_tz());
+  logtime := (SELECT to_char (now()::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
   
   uniquecolumn := (SELECT c.column_name
         FROM information_schema.key_column_usage AS c
@@ -40,7 +63,8 @@ BEGIN
               || '{'
               || '"topic":"' || 'db.postgres.sync' || '",'
               || '"originator":"' || 'tc-postgres-delta-processor' || '",'
-              || '"timestamp":"' || '2019-08-19T08:39:48.959Z'                   || '",'
+          --    || '"timestamp":"' || '2019-08-19T08:39:48.959Z'                   || '",'   
+            || '"timestamp":"' || logtime  || '",'
               || '"mime-type":"' || 'application/json'                   || '",'
               || '"payload": {'      
               
@@ -57,6 +81,7 @@ BEGIN
   RETURN rec;
 END;
 $body$ LANGUAGE plpgsql
+                              
 
 
 CREATE TRIGGER "scorecard_trigger"
