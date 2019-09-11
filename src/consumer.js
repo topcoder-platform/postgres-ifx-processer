@@ -85,7 +85,7 @@ async function dataHandler (messageSet, topic, partition) {
     try {
       const payload = JSON.parse(m.message.value)
       logger.debug('Received payload from kafka:')
-      logger.debug(payload)
+    //  logger.debug(payload)
       await updateInformix(payload)
       await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit offset only on success
     } catch (err) {
