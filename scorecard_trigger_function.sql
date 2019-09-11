@@ -102,7 +102,7 @@ EXECUTE PROCEDURE notify_trigger('scorecard_group_id','scorecard_id','name','wei
 CREATE TRIGGER "scorecard_question_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON scorecard_question
   FOR EACH ROW
-EXECUTE PROCEDURE notify_trigger('project_status_id', 'name', 'description', 'create_user', 'create_date', 'modify_user', 'modify_date');
+EXECUTE PROCEDURE notify_trigger('scorecard_question_id','scorecard_question_type_id','scorecard_section_id','description','guideline', 'weight','sort','upload_document','upload_document_required','create_user','create_date','modify_user' ,'modify_date','version');
 
 
 CREATE TRIGGER "scorecard_section_trigger"
@@ -110,12 +110,11 @@ CREATE TRIGGER "scorecard_section_trigger"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger('scorecard_section_id','scorecard_group_id','name','weight','sort','create_user','create_date','modify_user' ,'modify_date','version');
 
-
 CREATE TRIGGER "scorecard_question_type_lu_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON scorecard_question_type_lu
   FOR EACH ROW
-EXECUTE PROCEDURE notify_trigger('scorecard_question_id','scorecard_question_type_id','scorecard_section_id','description','guideline', 'weight','sort','upload_document','upload_document_required','create_user','create_date','modify_user' ,'modify_date','version');
-
+EXECUTE PROCEDURE notify_trigger('scorecard_question_type_id', 'name', 'description', 'create_user', 'create_date', 'modify_user', 'modify_date', 'version');
+                              
 
 CREATE TRIGGER "scorecard_status_lu_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON scorecard_status_lu
