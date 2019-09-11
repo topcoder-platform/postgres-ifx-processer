@@ -80,7 +80,7 @@ BEGIN
   
   RETURN rec;
 END;
-$body$ LANGUAGE plpgsql
+$body$ LANGUAGE plpgsql;
                               
 
 
