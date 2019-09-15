@@ -7,6 +7,7 @@ const logger = require('./common/logger')
 const informix = require('./common/informixWrapper.js')
 const healthcheck = require('topcoder-healthcheck-dropin');
 const kafkaOptions = config.get('KAFKA')
+const sleep = require('sleep');
 const isSslEnabled = kafkaOptions.SSL && kafkaOptions.SSL.cert && kafkaOptions.SSL.key
 const consumer = new Kafka.SimpleConsumer({
   connectionString: kafkaOptions.brokers_url,
@@ -41,6 +42,10 @@ const terminate = () => process.exit()
 async function updateInformix (payload) {
   logger.debug('Starting to update informix with data:')
   logger.debug(payload)
+  if (payload.payload.table === 'scorecard_question'){
+  logger.debug('inside scorecard_question')
+  sleep.sleep(2);
+  }
   //const operation = payload.operation.toLowerCase()
   const operation = payload.payload.operation.toLowerCase()
   console.log("level producer1 ",operation)
