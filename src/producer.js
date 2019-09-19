@@ -11,7 +11,7 @@ const pgClient = new pg.Client(pgConnectionString)
 
 const express = require('express')
 const app = express()
-const port = 4000
+const port = 3000
 
 
 async function setupPgClient () {
