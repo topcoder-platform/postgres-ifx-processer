@@ -81,6 +81,7 @@ workflows:
             branches:
               only:
                 - dev
+                - dev-retryfeature
       - "build-prod":
           context : org-global
           filters:
