@@ -7,9 +7,9 @@ module.exports = {
     host: process.env.INFORMIX_HOST || 'localhost',
     port: parseInt(process.env.INFORMIX_PORT, 10) || 2021,
     user: process.env.INFORMIX_USER || 'informix',
-    password: process.env.INFORMIX_PASSWORD || '1nf0rm1x',
-    database: process.env.INFORMIX_DATABASE || 'tcs_catalog',
-    server: process.env.INFORMIX_SERVER || 'informixoltp_tcp',
+    password: process.env.INFORMIX_PASSWORD || 'password',
+    database: process.env.INFORMIX_DATABASE || 'db',
+    server: process.env.INFORMIX_SERVER || 'informixserver',
     minpool: parseInt(process.env.MINPOOL, 10) || 1,
     maxpool: parseInt(process.env.MAXPOOL, 10) || 60,
     maxsize: parseInt(process.env.MAXSIZE, 10) || 0,
@@ -32,8 +32,11 @@ module.exports = {
       cert: process.env.KAFKA_CLIENT_CERT || null, // SSL client certificate file path
       key: process.env.KAFKA_CLIENT_CERT_KEY || null // SSL client key file path
     },
-    topic: process.env.KAFKA_TOPIC || 'db.postgres.sync', // Kafka topic to push and receive messages
-    partition: process.env.partition || [0] // Kafka partitions to use
+    topic: process.env.KAFKA_TOPIC || 'db.topic.sync', // Kafka topic to push and receive messages
+    partition: process.env.partition || [0], // Kafka partitions to use
+    maxRetry: process.env.MAX_RETRY || 3,
+    errorTopic: process.env.ERROR_TOPIC || 'db.scorecardtable.error',
+    recipients: ['admin@abc.com'] // Kafka partitions to use
   },
 
 	AUTH0_URL: process.env.AUTH0_URL ,

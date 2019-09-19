@@ -4,10 +4,11 @@
 const config = require('config')
 const Kafka = require('no-kafka')
 const logger = require('./common/logger')
-const informix = require('./common/informixWrapper.js')
+const updateInformix = require('./services/updateInformix')
+const pushToKafka = require('./services/pushToKafka')
 const healthcheck = require('topcoder-healthcheck-dropin');
 const kafkaOptions = config.get('KAFKA')
-const sleep = require('sleep');
+//const sleep = require('sleep');
 const isSslEnabled = kafkaOptions.SSL && kafkaOptions.SSL.cert && kafkaOptions.SSL.key
 const consumer = new Kafka.SimpleConsumer({
   connectionString: kafkaOptions.brokers_url,
@@ -34,51 +35,6 @@ const consumer = new Kafka.SimpleConsumer({
 
 
 const terminate = () => process.exit()
-
-/**
- * Updates informix database with insert/update/delete operation
- * @param {Object} payload The DML trigger data
- */
-async function updateInformix (payload) {
-  logger.debug('Starting to update informix with data:')
-  logger.debug(payload)
-  if (payload.payload.table === 'scorecard_question'){
-  logger.debug('inside scorecard_question')
-  sleep.sleep(2);
-  }
-  //const operation = payload.operation.toLowerCase()
-  const operation = payload.payload.operation.toLowerCase()
-  console.log("level producer1 ",operation)
-	let sql = null
-
-        const columns = payload.payload.data
-        const primaryKey = payload.payload.Uniquecolumn
-  // Build SQL query
-  switch (operation) {
-    case 'insert':
-      {
-        const columnNames = Object.keys(columns)
-        sql = `insert into ${payload.payload.schema}:${payload.payload.table} (${columnNames.join(', ')}) values (${columnNames.map((k) => `'${columns[k]}'`).join(', ')});` // "insert into <schema>:<table> (col_1, col_2, ...) values (val_1, val_2, ...)"
-      }
-      break
-    case 'update':
-      {
-	  sql = `update ${payload.payload.schema}:${payload.payload.table} set ${Object.keys(columns).map((key) => `${key}='${columns[key]}'`).join(', ')} where ${primaryKey}=${columns[primaryKey]};` // "update <schema>:<table> set col_1=val_1, col_2=val_2, ... where primary_key_col=primary_key_val"
-      }
-      break
-    case 'delete':
-      {
-        sql = `delete from ${payload.payload.schema}:${payload.payload.table} where ${primaryKey}=${columns[primaryKey]};` // ""delete from <schema>:<table> where primary_key_col=primary_key_val"
-      }
-      break
-    default:
-      throw new Error(`Operation ${operation} is not supported`)
-  }
-
-  const result = await informix.executeQuery(payload.payload.schema, sql, null)
-  return result
-}
-
 /**
  *
  * @param {Array} messageSet List of messages from kafka
@@ -90,15 +46,29 @@ async function dataHandler (messageSet, topic, partition) {
     try {
       const payload = JSON.parse(m.message.value)
       logger.debug('Received payload from kafka:')
-    //  logger.debug(payload)
+      logger.debug(payload)
       await updateInformix(payload)
+ //     await insertConsumerAudit(payload, true, undefined, false)
       await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit offset only on success
     } catch (err) {
       logger.error('Could not process kafka message')
       logger.logFullError(err)
+      if (!payload.retryCount) {
+        payload.retryCount = 0
+      }
+      if (payload.retryCount >= config.KAFKA.maxRetry) {
+        await pushToKafka(
+          Object.assign({}, payload, { topic: config.KAFKA.errorTopic, recipients: config.KAFKA.recipients })
+        )
+        return
+      }
+      await pushToKafka(
+        Object.assign({}, payload, { retryCount: payload.retryCount + 1 })
+      )
+      }
     }
   }
-}
+
 
 /**
  * Initialize kafka consumer
@@ -117,3 +87,4 @@ async function setupKafkaConsumer () {
 }
 
 setupKafkaConsumer()
+
