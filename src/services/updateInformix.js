@@ -7,15 +7,10 @@ const logger = require('../common/logger')
  * @param {Object} payload The DML trigger data
  */
 async function updateInformix (payload) {
-  logger.debug('Starting to update informix with data:')
-  logger.debug(payload)
-  if (payload.payload.table === 'scorecard_question'){
-  logger.debug('inside scorecard_question')
-  sleep.sleep(2);
-  }
+  logger.debug('=====Starting to update informix with data:====')
   //const operation = payload.operation.toLowerCase()
   const operation = payload.payload.operation.toLowerCase()
-  console.log("level producer1 ",operation)
+  console.log("level 1 informix ",operation)
 	let sql = null
 
         const columns = payload.payload.data

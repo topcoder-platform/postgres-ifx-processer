@@ -8,7 +8,7 @@ const pushToKafka = require('./services/pushToKafka')
 const pgOptions = config.get('POSTGRES')
 const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
 const pgClient = new pg.Client(pgConnectionString)
-
+const auditTrail = require('./services/auditTrail');
 const express = require('express')
 const app = express()
 const port = 3000
@@ -17,28 +17,26 @@ const port = 3000
 async function setupPgClient () {
   try {
     await pgClient.connect()
-    // Listen to each of the trigger functions
     for (const triggerFunction of pgOptions.triggerFunctions) {
       await pgClient.query(`LISTEN ${triggerFunction}`)
     }
     pgClient.on('notification', async (message) => {
-      console.log('Received trigger payload:')
-      logger.debug(`Received trigger payload:`)
-      logger.debug(message)
-      //console.log(message)
       try {
         const payload = JSON.parse(message.payload)
-        console.log("level 0",payload);
 	const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
         if (validTopicAndOriginator) {
-         // await pushToKafka(payload)
+     console.log(`${payload.topic} ${payload.payload.table} ${payload.payload.operation} ${payload.timestamp}`);
 	await pushToKafka(payload)
-        } else {
+	} else {
           logger.debug('Ignoring message with incorrect topic or originator')
         }
-      } catch (err) {
+     await auditTrail([payload.payload.payloadseqid,'scorecard_producer',1,payload.topic,payload.payload.table,payload.payload.Uniquecolumn,
+	     payload.payload.operation,"",payload.timestamp,new Date(),JSON.stringify(payload.payload)],'producer')
+      } catch (error) {
         logger.error('Could not parse message payload')
-        logger.logFullError(err)
+     await auditTrail([payload.payload.payloadseqid,'scorecard_producer',0,payload.topic,payload.payload.table,payload.payload.Uniquecolumn,
+	     payload.payload.operation,"error",payload.timestamp,new Date(),JSON.stringify(payload.payload)],'producer')
+	logger.logFullError(error)
       }
     })
     logger.info('Listening to notifications')
