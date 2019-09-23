@@ -11,6 +11,7 @@ DECLARE
   payload_items TEXT[];
   uniquecolumn TEXT;
   logtime TEXT;
+  payloadseqid INTEGER;
 BEGIN
   -- Set record row depending on operation
   CASE TG_OP
