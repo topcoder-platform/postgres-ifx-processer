@@ -3,3 +3,6 @@ node_modules
 *.log
 env_producer.sh
 env_consumer.sh
+*.env
+*.sh
+*.list

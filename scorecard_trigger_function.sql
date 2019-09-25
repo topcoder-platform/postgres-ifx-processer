@@ -11,6 +11,7 @@ DECLARE
   payload_items TEXT[];
   uniquecolumn TEXT;
   logtime TEXT;
+  payloadseqid INTEGER;
 BEGIN
   -- Set record row depending on operation
   CASE TG_OP
@@ -51,6 +52,7 @@ BEGIN
   END LOOP;
   --logtime := (select date_display_tz());
   logtime := (SELECT to_char (now()::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
+  payloadseqid := (select nextval('payloadsequence'::regclass));
   
   uniquecolumn := (SELECT c.column_name
         FROM information_schema.key_column_usage AS c
@@ -63,11 +65,10 @@ BEGIN
               || '{'
               || '"topic":"' || 'db.postgres.sync' || '",'
               || '"originator":"' || 'tc-postgres-delta-processor' || '",'
-          --    || '"timestamp":"' || '2019-08-19T08:39:48.959Z'                   || '",'   
-            || '"timestamp":"' || logtime  || '",'
+              || '"timestamp":"' || logtime  || '",'
               || '"mime-type":"' || 'application/json'                   || '",'
               || '"payload": {'      
-              
+              || '"payloadseqid":"' || payloadseqid                   || '",'
               || '"Uniquecolumn":"' || uniquecolumn                   || '",'
               || '"operation":"' || TG_OP                                || '",'
               || '"schema":"'    || TG_TABLE_SCHEMA                      || '",'
@@ -125,3 +126,22 @@ CREATE TRIGGER "scorecard_type_lu_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON scorecard_type_lu
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger('scorecard_type_id', 'name', 'description', 'create_user', 'create_date', 'modify_user', 'modify_date','version');
+                              
+ CREATE TABLE producer_scorecard_audit 
+(seq_id SERIAL NOT NULL, payloadseqid INTEGER NOT NULL, 
+origin_source CHARACTER VARYING(64) NOT NULL, kafka_post_status BOOLEAN, 
+topic_name CHARACTER VARYING(64), table_name CHARACTER VARYING(64) NOT NULL, 
+uniquecolumn CHARACTER VARYING(64), operationtype CHARACTER VARYING NOT NULL, 
+errormessage CHARACTER VARYING, payloadtime TIMESTAMP(6) WITHOUT TIME ZONE,
+ auditdatetime DATE NOT NULL, payload CHARACTER VARYING NOT NULL);
+ 
+ CREATE TABLE consumer_scorecard_audit (seq_id SERIAL NOT NULL, payloadseqid INTEGER NOT NULL, 
+origin_source CHARACTER VARYING(64) NOT NULL, table_name CHARACTER VARYING(64) NOT NULL, 
+uniquecolumn CHARACTER VARYING(64), operationtype CHARACTER VARYING NOT NULL, 
+dest_db_status BOOLEAN, dest_retry_count INTEGER, errormessage CHARACTER VARYING, 
+payloadtime TIMESTAMP(6) WITHOUT TIME ZONE, auditdatetime DATE NOT NULL, 
+dest_operationquery CHARACTER VARYING);
+
+CREATE SEQUENCE payloadsequence INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 
+START WITH 1  NO CYCLE;
+
