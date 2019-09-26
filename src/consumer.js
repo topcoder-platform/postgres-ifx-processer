@@ -51,7 +51,7 @@ async function dataHandler(messageSet, topic, partition) {
       await updateInformix(message)
       await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit offset only on success
       await auditTrail([message.payload.payloadseqid,'scorecard_consumer',message.payload.table,message.payload.Uniquecolumn,
-             message.payload.operation,1,0,"",message.timestamp,new Date(),message.payload],'consumer')
+             message.payload.operation,1,0,"",message.timestamp,new Date(),message.payload.data],'consumer')
     } catch (err) {
       logger.error('Could not process kafka message')
       //logger.logFullError(err)
