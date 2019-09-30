@@ -91,7 +91,9 @@ async function dataHandler(messageSet, topic, partition) {
 async function setupKafkaConsumer() {
   try {
     await consumer.init()
-    await consumer.subscribe(kafkaOptions.topic, kafkaOptions.partition, { time: Kafka.LATEST_OFFSET }, dataHandler)
+    //await consumer.subscribe(kafkaOptions.topic, kafkaOptions.partition, { time: Kafka.LATEST_OFFSET }, dataHandler)
+    await consumer.subscribe(kafkaOptions.topic, dataHandler)
+	  
     logger.info('Initialized kafka consumer')
     healthcheck.init([check])
   } catch (err) {
