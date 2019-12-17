@@ -70,7 +70,7 @@ jobs:
   "build-test":
     <<: *defaults
     environment:
-      DEPLOY_ENV: "TEST"
+      DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "TEST"
       GLOBAL_ENV: "dev"
       APP_NAME: "postgres-ifx-processer"
