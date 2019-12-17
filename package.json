@@ -8,7 +8,8 @@
     "lint:fix": "standard --env mocha --fix",
     "producer": "node ./src/producer.js",
     "consumer": "node ./src/consumer.js",
-    "start": "npm run producer & npm run consumer"
+    "producer_dd": "node ./src/producer_dd.js",
+    "start": "npm run producer & npm run producer_dd & npm run consumer"
   },
   "author": "Topcoder",
   "license": "ISC",
