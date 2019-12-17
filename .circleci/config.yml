@@ -66,8 +66,6 @@ jobs:
       GLOBAL_ENV: "dev"
       APP_NAME: "postgres-ifx-processer"
     steps: *build_steps
-  # Build & Deploy against production backend
-jobs:
   # Build & Deploy against development backend #
   "build-test":
     <<: *defaults
