@@ -33,7 +33,7 @@ const check = function () {
   return connected;
 };
 
-
+let cs_processId;
 const terminate = () => process.exit()
 /**
  *
@@ -41,23 +41,34 @@ const terminate = () => process.exit()
  * @param {String} topic The name of the message topic
  * @param {Number} partition The kafka partition to which messages are written
  */
+let message;
+let cs_payloadseqid;
 async function dataHandler(messageSet, topic, partition) {
-  for (const m of messageSet) { // Process messages sequentially
+	for (const m of messageSet) { // Process messages sequentially
     let message
     try {
+    //let message
       message = JSON.parse(m.message.value)
+//	cs_payloadseqid = message.payload.payloadseqid   
+	    //console.log(message);
       logger.debug('Received message from kafka:')
-      logger.debug(JSON.stringify(message))
-      await updateInformix(message)
+     logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
+       await updateInformix(message)
       await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit offset only on success
-      await auditTrail([message.payload.payloadseqid,'scorecard_consumer',message.payload.table,message.payload.Uniquecolumn,
-             message.payload.operation,1,0,"",message.timestamp,new Date(),message.payload.data],'consumer')
+   await auditTrail([message.payload.payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
+            message.payload.operation,"Informix-updated","","","",message.payload.data, message.timestamp,message.topic],'consumer')
     } catch (err) {
-      logger.error('Could not process kafka message')
+      logger.error(`Could not process kafka message or informix DB error: "${err.message}"`)
       //logger.logFullError(err)
+       if (!cs_payloadseqid){
+	    cs_payloadseqid= 'err-'+(new Date()).getTime().toString(36) + Math.random().toString(36).slice(2);
+    }
+	    
+   await auditTrail([cs_payloadseqid,3333,'message.payload.table','message.payload.Uniquecolumn',
+           'message.payload.operation',"Error-Consumer","",err.message,"",'message.payload.data',new Date(),'message.topic'],'consumer')
       try {
         await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit success as will re-publish
-        logger.debug('Trying to push same message after adding retryCounter')
+        logger.debug(`Trying to push same message after adding retryCounter`)
         if (!message.payload.retryCount) {
           message.payload.retryCount = 0
           logger.debug('setting retry counter to 0 and max try count is : ', config.KAFKA.maxRetry);
@@ -73,12 +84,13 @@ async function dataHandler(messageSet, topic, partition) {
           return
         }
         message.payload['retryCount'] = message.payload.retryCount + 1;
+   //await auditTrail([message.payload.payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
+     //       message.payload.operation,"Error",message.payload['retryCount'],err.message,"",message.payload.data, message.timestamp,message.topic],'consumer')
         await pushToKafka(message)
-        logger.debug('pushed same message after adding retryCount')
+     logger.debug(` After kafka push Retry Count "${message.payload.retryCount}"`)
       } catch (err) {
-	 //await auditTrail([payload.payload.payloadseqid,'scorecard_consumer',payload.payload.table,payload.payload.Uniquecolumn,
-           //  payload.payload.operation,0,message.payload.retryCount,"re-publish kafka err",payload.timestamp,new Date(),""],'consumer')
-        logger.error("Error occured in re-publishing kafka message", err)
+        
+	      logger.error("Error occured in re-publishing kafka message", err)
       }
     }
   }

@@ -12,34 +12,45 @@ const auditTrail = require('./services/auditTrail');
 const express = require('express')
 const app = express()
 const port = 3000
-
-
+//console.log(`pgConnectionString value = ${pgConnectionString}`)
+var pl_processid;
+var pl_randonseq = 'err-'+(new Date()).getTime().toString(36) + Math.random().toString(36).slice(2);
 async function setupPgClient () {
-  try {
+	try {
+//console.log(`${pgOptions.triggerFunctions}`);
     await pgClient.connect()
     for (const triggerFunction of pgOptions.triggerFunctions) {
       await pgClient.query(`LISTEN ${triggerFunction}`)
     }
     pgClient.on('notification', async (message) => {
-      try {
+       //const payload = JSON.parse(message.payload);
+     pl_processid = message.processId;
+     //console.log(message);
+	    try 
+	   {
         const payload = JSON.parse(message.payload)
-	const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
+	var pl_seqid = payload.payload.payloadseqid
+	var pl_topic = payload.topic
+	var pl_table = payload.payload.table
+	var pl_uniquecolumn = payload.payload.Uniquecolumn
+	var pl_operation = payload.payload.operation
+	var pl_timestamp = payload.timestamp	
+	var pl_payload = JSON.stringify(payload.payload)	   
+   const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
         if (validTopicAndOriginator) {
-     console.log(`${payload.topic} ${payload.payload.table} ${payload.payload.operation} ${payload.timestamp}`);
+        logger.debug(`producer : ${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`);
 	await pushToKafka(payload)
 	} else {
           logger.debug('Ignoring message with incorrect topic or originator')
         }
-     await auditTrail([payload.payload.payloadseqid,'scorecard_producer',1,payload.topic,payload.payload.table,payload.payload.Uniquecolumn,
-	     payload.payload.operation,"",payload.timestamp,new Date(),JSON.stringify(payload.payload)],'producer')
-      } catch (error) {
+await auditTrail([pl_seqid,pl_processid,pl_table,pl_uniquecolumn,pl_operation,"push-to-kafka","","","",pl_payload,pl_timestamp,pl_topic],'producer')
+	   } catch (error) {
         logger.error('Could not parse message payload')
-     await auditTrail([payload.payload.payloadseqid,'scorecard_producer',0,payload.topic,payload.payload.table,payload.payload.Uniquecolumn,
-	     payload.payload.operation,"error",payload.timestamp,new Date(),JSON.stringify(payload.payload)],'producer')
-	logger.logFullError(error)
+await auditTrail([pl_randonseq,1111,'pl_table','pl_uniquecolumn','pl_operation',"error-producer","","",error.message,'pl_payload',new Date(),'pl_topic'],'producer')
+		  logger.logFullError(error)
       }
     })
-    logger.info('Listening to notifications')
+    logger.info('pg-ifx-sync producer: Listening to notifications')
   } catch (err) {
     logger.error('Could not setup postgres client')
     logger.logFullError(err)

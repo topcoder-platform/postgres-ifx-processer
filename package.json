@@ -13,6 +13,7 @@
   "author": "Topcoder",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "*",
     "config": "^3.2.2",
     "informix-wrapper": "git+https://github.com/appirio-tech/informix-wrapper.git",
     "no-kafka": "^3.4.3",
