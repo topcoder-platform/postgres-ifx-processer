@@ -3,8 +3,8 @@ const logger = require('../common/logger')
 const _ = require('lodash')
 var AWS = require("aws-sdk");
 async function pushToDynamoDb(payload) {
-  try { console.log('----Inside DynomoDB code -------');
-          console.log(payload)
+  try { console.log('----Push To DynomoDB  -------');
+        //  console.log(payload)
 	   p_dd_payloadseqid = payload.payload.payloadseqid;
 	    var params = {
 	    TableName: 'test_pg_ifx_payload_sync',
@@ -20,14 +20,14 @@ async function pushToDynamoDb(payload) {
   		}
 	  var docClient = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'});
 	  docClient.put(params, function(err, data) {
-    	if (err) console.log(err);
-    	else console.log(data);
+    	if (err) logger.error(err);
+    	else logger.info(data);
   	});
 
   } catch (e) {
-          console.log(e)
+          logger.error(`Error at PushToDynamoDB "${e}"`)
   }
 }
 
-console.log("hello from DD")
+console.log("--from DyanomoDb==")
 module.exports = pushToDynamoDb

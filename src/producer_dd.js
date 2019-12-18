@@ -4,7 +4,6 @@
 const config = require('config')
 const pg = require('pg')
 const logger = require('./common/logger')
-//const pushToKafka = require('./services/pushToKafka')
 const pushToDynamoDb = require('./services/pushToDynamoDb')
 const pgOptions = config.get('POSTGRES')
 const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
@@ -12,8 +11,7 @@ const pgClient = new pg.Client(pgConnectionString)
 const auditTrail = require('./services/auditTrail');
 const express = require('express')
 const app = express()
-const port = 3100
-//console.log(`pgConnectionString value = ${pgConnectionString}`)
+const port = 3000
 var pl_processid;
 var pl_randonseq = 'err-'+(new Date()).getTime().toString(36) + Math.random().toString(36).slice(2);
 async function setupPgClient () {
@@ -37,7 +35,7 @@ async function setupPgClient () {
 	var pl_payload = JSON.stringify(payload.payload)	   
    const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
         if (validTopicAndOriginator) {
-        logger.debug(`Producer DynamoDb : ${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`);
+        logger.info(`Producer DynamoDb : ${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`);
 	await pushToDynamoDb(payload)
 	} else {
           logger.debug('Ignoring message with incorrect topic or originator')
