@@ -42,24 +42,35 @@ async function setupPgClient () {
 	await pushToKafka(payload)
 	} else {
           logger.debug('Ignoring message with incorrect topic or originator')
+
         }
 await auditTrail([pl_seqid,pl_processid,pl_table,pl_uniquecolumn,pl_operation,"push-to-kafka","","","",pl_payload,pl_timestamp,pl_topic],'producer')
 	   } catch (error) {
         logger.error('Could not parse message payload')
+   logger.debug(`error-sync: producer parse message : "${error.message}"`)	  
 await auditTrail([pl_randonseq,1111,'pl_table','pl_uniquecolumn','pl_operation',"error-producer","","",error.message,'pl_payload',new Date(),'pl_topic'],'producer')
 		  logger.logFullError(error)
       }
     })
     logger.info('pg-ifx-sync producer: Listening to notifications')
   } catch (err) {
+   logger.debug(`error-sync: producer postgres-setup 1 :"${err.message}"`)	  
     logger.error('Could not setup postgres client')
     logger.logFullError(err)
+
     terminate()
   }
 }
-
+const terminate = () => process.exit()
 async function run () {
-  await setupPgClient()
+try {
+	await setupPgClient()
+}
+catch(err)
+{
+logger.debug(`Could not setup postgres client`)
+logger.debug(`error-sync: producer postgres-setup 0 :"${err.message}"`)
+}
 }
 
 run()

@@ -5,7 +5,7 @@ const logger = require('../common/logger')
 const pgOptions = config.get('POSTGRES')
 const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
 let pgClient2
-console.log(`"${pgConnectionString}"`);
+//console.log(`"${pgConnectionString}"`);
 async function setupPgClient2 () {
   pgClient2 = new pg.Client(pgConnectionString)
   try {

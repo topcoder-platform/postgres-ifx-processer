@@ -41,33 +41,37 @@ const terminate = () => process.exit()
  * @param {String} topic The name of the message topic
  * @param {Number} partition The kafka partition to which messages are written
  */
-let message;
-let cs_payloadseqid;
+//let message;
+//let cs_payloadseqid;
 async function dataHandler(messageSet, topic, partition) {
+let cs_payloadseqid
 	for (const m of messageSet) { // Process messages sequentially
     let message
     try {
-    //let message
       message = JSON.parse(m.message.value)
-//	cs_payloadseqid = message.payload.payloadseqid   
-	    //console.log(message);
       logger.debug('Received message from kafka:')
-     logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
+      if (message.payload.payloadseqid) cs_payloadseqid = message.payload.payloadseqid;
+      logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
        await updateInformix(message)
       await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit offset only on success
-   await auditTrail([message.payload.payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
+       auditTrail([cs_payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
             message.payload.operation,"Informix-updated","","","",message.payload.data, message.timestamp,message.topic],'consumer')
     } catch (err) {
       logger.error(`Could not process kafka message or informix DB error: "${err.message}"`)
       //logger.logFullError(err)
+      logger.debug(`error-sync: consumer "${err.message}"`) 
        if (!cs_payloadseqid){
 	    cs_payloadseqid= 'err-'+(new Date()).getTime().toString(36) + Math.random().toString(36).slice(2);
-    }
+                        }
 	    
    await auditTrail([cs_payloadseqid,3333,'message.payload.table','message.payload.Uniquecolumn',
            'message.payload.operation',"Error-Consumer","",err.message,"",'message.payload.data',new Date(),'message.topic'],'consumer')
       try {
+	      var retryvar
+	      if (message.payload['retryCount']) retryvar = message.payload.retryCount;
         await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit success as will re-publish
+        await auditTrail([cs_payloadseqid,3333,'message.payload.table','message.payload.Uniquecolumn',
+         'message.payload.operation',"Informix-Updated1",retryvar,"","",'message.payload.data',new Date(),'message.topic'],'consumer')
         logger.debug(`Trying to push same message after adding retryCounter`)
         if (!message.payload.retryCount) {
           message.payload.retryCount = 0
@@ -75,22 +79,23 @@ async function dataHandler(messageSet, topic, partition) {
         }
         if (message.payload.retryCount >= config.KAFKA.maxRetry) {
           logger.debug('Recached at max retry counter, sending it to error queue: ', config.KAFKA.errorTopic);
-
+           logger.debug(`error-sync: consumer max-retry-limit reached`) 
           let notifiyMessage = Object.assign({}, message, { topic: config.KAFKA.errorTopic })
           notifiyMessage.payload['recipients'] = config.KAFKA.recipients
           logger.debug('pushing following message on kafka error alert queue:')
-          logger.debug(notifiyMessage)
+          //logger.debug(notifiyMessage)
           await pushToKafka(notifiyMessage)
           return
         }
         message.payload['retryCount'] = message.payload.retryCount + 1;
-   //await auditTrail([message.payload.payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
-     //       message.payload.operation,"Error",message.payload['retryCount'],err.message,"",message.payload.data, message.timestamp,message.topic],'consumer')
         await pushToKafka(message)
      logger.debug(` After kafka push Retry Count "${message.payload.retryCount}"`)
       } catch (err) {
         
+   await auditTrail([cs_payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
+            message.payload.operation,"Error-republishing",message.payload['retryCount'],err.message,"",message.payload.data, message.timestamp,message.topic],'consumer')
 	      logger.error("Error occured in re-publishing kafka message", err)
+              logger.debug(`error-sync: consumer re-publishing "${err.message}"`) 
       }
     }
   }
@@ -111,6 +116,7 @@ async function setupKafkaConsumer() {
   } catch (err) {
     logger.error('Could not setup kafka consumer')
     logger.logFullError(err)
+    logger.debug(`error-sync: consumer kafka-setup "${err.message}"`) 
     terminate()
   }
 }

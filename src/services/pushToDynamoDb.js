@@ -18,7 +18,7 @@ async function pushToDynamoDb(payload) {
 		timestamp: Date.now()
     		}
   		}
-	  var docClient = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'});
+	  var docClient = new AWS.DynamoDB.DocumentClient({region: 'us-east-1',convertEmptyValues: true});
 	  docClient.put(params, function(err, data) {
     	if (err) logger.error(err);
     	else logger.info(data);
@@ -29,5 +29,5 @@ async function pushToDynamoDb(payload) {
   }
 }
 
-console.log("--from DyanomoDb==")
+console.log("--from DyanomoDb--")
 module.exports = pushToDynamoDb
