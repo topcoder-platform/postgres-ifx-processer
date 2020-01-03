@@ -8,7 +8,7 @@
     "lint:fix": "standard --env mocha --fix",
     "producer": "node ./src/producer.js",
     "consumer": "node ./src/consumer.js",
-    "producer_dd": "node ./src/producer_dd.js",
+    "producer_dd": "node ./src/producer.js failover",
     "start": "npm run producer & npm run producer_dd & npm run consumer"
   },
   "author": "Topcoder",

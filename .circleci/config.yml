@@ -103,6 +103,7 @@ workflows:
             branches:
               only:
                 - dev-test-pg             
+                - dev-test-pg-rf             
       - "build-prod":
           context : org-global
           filters:
