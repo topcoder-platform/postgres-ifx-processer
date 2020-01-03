@@ -21,7 +21,6 @@ async function setupPgClient() {
       await pgClient.query(`LISTEN ${triggerFunction}`)
     }
     pgClient.on('notification', async (message) => {
-      const pl_randonseq = 'err-' + (new Date()).getTime().toString(36) + Math.random().toString(36).slice(2)
       try {
         const payload = JSON.parse(message.payload)
         const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
@@ -43,9 +42,7 @@ async function setupPgClient() {
         logger.error('Could not parse message payload')
         logger.debug(`error-sync: producer parse message : "${error.message}"`)
         logger.logFullError(error)
-        if (!isFailover) {
-          await auditTrail([pl_randonseq, 1111, "", "", "", "error-producer", "", "", error.message, "", new Date(), ""], 'producer')
-        }
+        audit(error)
         // push to slack - alertIt("slack message"
       }
     })
@@ -70,21 +67,28 @@ run()
 
 async function audit(message) {
   const pl_processid = message.processId
-  const payload = JSON.parse(message.payload)
-  const pl_seqid = payload.payload.payloadseqid
-  const pl_topic = payload.topic // TODO can move in config ? 
-  const pl_table = payload.payload.table
-  const pl_uniquecolumn = payload.payload.Uniquecolumn
-  const pl_operation = payload.payload.operation
-  const pl_timestamp = payload.timestamp
-  const pl_payload = JSON.stringify(payload.payload)
-  const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`
-  if (!isFailover) {
-    logger.debug(`producer : ${logMessage}`);
+  if (pl_processid != 'undefined') {
+    const payload = JSON.parse(message.payload)
+    const pl_seqid = payload.payload.payloadseqid
+    const pl_topic = payload.topic // TODO can move in config ? 
+    const pl_table = payload.payload.table
+    const pl_uniquecolumn = payload.payload.Uniquecolumn
+    const pl_operation = payload.payload.operation
+    const pl_timestamp = payload.timestamp
+    const pl_payload = JSON.stringify(payload.payload)
+    const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`
+    if (!isFailover) {
+      logger.debug(`producer : ${logMessage}`);
+    } else {
+      logger.debug(`Producer DynamoDb : ${logMessage}`);
+    }
+    auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "", pl_payload, pl_timestamp, pl_topic], 'producer')
   } else {
-    logger.debug(`Producer DynamoDb : ${logMessage}`);
+    const pl_randonseq = 'err-' + (new Date()).getTime().toString(36) + Math.random().toString(36).slice(2)
+    if (!isFailover) {
+      await auditTrail([pl_randonseq, 1111, "", "", "", "error-producer", "", "", message.message, "", new Date(), ""], 'producer')
+    }
   }
-  auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "", pl_payload, pl_timestamp, pl_topic], 'producer')
 }
 
 function alertIt(message) {
