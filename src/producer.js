@@ -29,11 +29,11 @@ async function setupPgClient() {
         const payload = JSON.parse(message.payload)
         const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
         if (validTopicAndOriginator) {
-          if (isFailover) {
-            await pushToDynamoDb(payload)
-          } else {
+          if (!isFailover) {
             await pushToKafka(payload)
             audit(payload)
+          } else {
+            await pushToDynamoDb(payload)
           }
         } else {
           logger.debug('Ignoring message with incorrect topic or originator')
@@ -42,7 +42,9 @@ async function setupPgClient() {
       } catch (error) {
         logger.error('Could not parse message payload')
         logger.debug(`error-sync: producer parse message : "${error.message}"`)
-        //await auditTrail([pl_randonseq, 1111, 'pl_table', 'pl_uniquecolumn', 'pl_operation', "error-producer", "", "", error.message, 'pl_payload', new Date(), 'pl_topic'], 'producer')
+        if (!isFailover) {
+          await auditTrail([pl_randonseq, 1111, 'pl_table', 'pl_uniquecolumn', 'pl_operation', "error-producer", "", "", error.message, 'pl_payload', new Date(), 'pl_topic'], 'producer')
+        }
         logger.logFullError(error)
         // push to slack - alertIt("slack message"
       }
@@ -52,7 +54,6 @@ async function setupPgClient() {
     logger.debug(`error-sync: producer postgres-setup 1 :"${err.message}"`)
     logger.error('Could not setup postgres client')
     logger.logFullError(err)
-
     terminate()
   }
 }
