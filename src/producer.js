@@ -30,9 +30,12 @@ async function setupPgClient() {
         const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
         if (validTopicAndOriginator) {
           if (!isFailover) {
+            logger.info('trying to push on kafka topic')
             await pushToKafka(payload)
             audit(payload)
+            logger.info('pushed to kafka and added for audit trail')
           } else {
+            logger.info('taking backup on dynamodb for reconciliation')
             await pushToDynamoDb(payload)
           }
         } else {
@@ -42,17 +45,16 @@ async function setupPgClient() {
       } catch (error) {
         logger.error('Could not parse message payload')
         logger.debug(`error-sync: producer parse message : "${error.message}"`)
+        logger.logFullError(error)
         if (!isFailover) {
           await auditTrail([pl_randonseq, 1111, 'pl_table', 'pl_uniquecolumn', 'pl_operation', "error-producer", "", "", error.message, 'pl_payload', new Date(), 'pl_topic'], 'producer')
         }
-        logger.logFullError(error)
         // push to slack - alertIt("slack message"
       }
     })
-    logger.info('pg-ifx-sync producer: Listening to notifications')
+    logger.info('pg-ifx-sync producer: Listening to pg-trigger channel.')
   } catch (err) {
-    logger.debug(`error-sync: producer postgres-setup 1 :"${err.message}"`)
-    logger.error('Could not setup postgres client')
+    logger.error('Error in setting up postgres client: ', err.message)
     logger.logFullError(err)
     terminate()
   }
@@ -61,14 +63,8 @@ async function setupPgClient() {
 const terminate = () => process.exit()
 
 async function run() {
-  try {
-    await setupPgClient()
-  }
-  catch (err) {
-    logger.debug(`Could not setup postgres client`)
-    logger.debug(`error-sync: producer postgres-setup 0 :"${err.message}"`)
-    terminate()
-  }
+  logger.debug("Initialising producer setup...")
+  await setupPgClient()
 }
 
 // execute  
