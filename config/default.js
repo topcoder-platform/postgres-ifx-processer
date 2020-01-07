@@ -38,6 +38,11 @@ module.exports = {
     errorTopic: process.env.ERROR_TOPIC || 'db.scorecardtable.error',
     recipients: ['admin@abc.com'] // Kafka partitions to use
   },
+  SLACK: {
+    URL: process.env.SLACKURL || 'us-east-1',
+    SLACKCHANNEL: process.env.SLACKCHANNEL || 'ifxpg-migrator',
+    SLACKNOTIFY:  process.env.SLACKNOTIFY || 'false'
+  },
 
 	AUTH0_URL: process.env.AUTH0_URL ,
 	AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE ,

@@ -7,6 +7,7 @@ const logger = require('./common/logger')
 const pushToKafka = require('./services/pushToKafka')
 const pushToDynamoDb = require('./services/pushToDynamoDb')
 const pgOptions = config.get('POSTGRES')
+const postMessage = require('./services/posttoslack')
 const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
 const pgClient = new pg.Client(pgConnectionString)
 const auditTrail = require('./services/auditTrail');
@@ -14,23 +15,27 @@ const express = require('express')
 const app = express()
 const port = 3000
 const isFailover = process.argv[2] != undefined ? (process.argv[2] === 'failover' ? true : false) : false
+
 async function setupPgClient() {
-  try {
+var payloadcopy 
+try {
     await pgClient.connect()
     for (const triggerFunction of pgOptions.triggerFunctions) {
       await pgClient.query(`LISTEN ${triggerFunction}`)
     }
     pgClient.on('notification', async (message) => {
       try {
+	payloadcopy = ""
         const payload = JSON.parse(message.payload)
+	payloadcopy = message
         const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
         if (validTopicAndOriginator) {
           if (!isFailover) {
-            logger.info('trying to push on kafka topic')
+            //logger.info('trying to push on kafka topic')
             await pushToKafka(payload)
-            logger.info('pushed to kafka and added for audit trail')
+            logger.info('Push to kafka and added for audit trail')
           } else {
-            logger.info('taking backup on dynamodb for reconciliation')
+            logger.info('Push to dynamodb for reconciliation')
             await pushToDynamoDb(payload)
           }
           audit(message)
@@ -41,16 +46,20 @@ async function setupPgClient() {
       } catch (error) {
         logger.error('Could not parse message payload')
         logger.debug(`error-sync: producer parse message : "${error.message}"`)
-        logger.logFullError(error)
+	const errmsg1 = `postgres-ifx-processor: producer or dd : Error Parse or payload : "${error.message}" \n payload : "${payloadcopy.payload}"`
+	logger.logFullError(error)
         audit(error)
         // push to slack - alertIt("slack message"
+	await callposttoslack(errmsg1)
       }
     })
     logger.info('pg-ifx-sync producer: Listening to pg-trigger channel.')
   } catch (err) {
-    logger.error('Error in setting up postgres client: ', err.message)
+    const errmsg = `postgres-ifx-processor: producer or dd : Error in setting up postgres client: "${err.message}"`
+    logger.error(errmsg)
     logger.logFullError(err)
     // push to slack - alertIt("slack message")
+    await callposttoslack(errmsg)
     terminate()
   }
 }
@@ -62,6 +71,28 @@ async function run() {
   await setupPgClient()
 }
 
+async function callposttoslack(slackmessage) {
+if(config.SLACK.SLACKNOTIFY === 'true') {
+    return new Promise(function (resolve, reject) {
+	postMessage(slackmessage, (response) => {
+          console.log(`respnse : ${response}`)
+		if (response.statusCode < 400) {
+                logger.debug('Message posted successfully');
+                //callback(null);
+            } else if (response.statusCode < 500) {
+		const errmsg1 =`Slack Error: posting message to Slack API: ${response.statusCode} - ${response.statusMessage}`
+                logger.debug(`error-sync: ${errmsg1}`)
+            }
+		else {
+                logger.debug(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
+                //callback(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
+            }
+		resolve("done")
+	});
+    }) //end
+}
+
+}
 // execute  
 run()
 
@@ -89,12 +120,6 @@ async function audit(message) {
       await auditTrail([pl_randonseq, 1111, "", "", "", "error-producer", "", "", message.message, "", new Date(), ""], 'producer')
     }
   }
-}
-
-function alertIt(message) {
-  /**
-      // call slack 
-   */
 }
 
 app.get('/health', (req, res) => {
