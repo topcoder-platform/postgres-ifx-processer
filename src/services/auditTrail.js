@@ -45,6 +45,7 @@ if (sourcetype === 'producer'){
   //  logger.debug(`--Audit Trail update success-- `)
   }
 })
+pgClient2.end()
 }
 
 

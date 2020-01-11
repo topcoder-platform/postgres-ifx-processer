@@ -43,6 +43,11 @@ module.exports = {
     SLACKCHANNEL: process.env.SLACKCHANNEL || 'ifxpg-migrator',
     SLACKNOTIFY:  process.env.SLACKNOTIFY || 'false'
   },
+   RECONSILER:{
+    RECONSILER_START: process.env.RECONSILER_START || 10,
+    RECONSILER_END: process.env.RECONSILER_END || 5,
+    RECONSILER_DURATION_TYPE: process.env.RECONSILER_DURATION_TYPE || 'm'
+  },
 
 	AUTH0_URL: process.env.AUTH0_URL ,
 	AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE ,

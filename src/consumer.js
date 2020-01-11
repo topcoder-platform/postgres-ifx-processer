@@ -73,8 +73,8 @@ let cs_payloadseqid
 	//var retryvar
 	if (message.payload['retryCount']) retryvar = message.payload.retryCount;
         await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit success as will re-publish
-        await auditTrail([cs_payloadseqid,3333,'message.payload.table','message.payload.Uniquecolumn',
-         'message.payload.operation',"Informix-Updated1",retryvar,"","",'message.payload.data',new Date(),'message.topic'],'consumer')
+    //    await auditTrail([cs_payloadseqid,3333,'message.payload.table','message.payload.Uniquecolumn',
+      //   'message.payload.operation',"Informix-Updated1",retryvar,"","",'message.payload.data',new Date(),'message.topic'],'consumer')
         //await callposttoslack(`Retry for Kafka push : retrycount : "${retryvar}"`)
 	logger.debug(`Trying to push same message after adding retryCounter`)
         if (!message.payload.retryCount) {
