@@ -1,5 +1,24 @@
 SET search_path TO common_oltp;
 
+CREATE TABLE
+    pgifx_sync_audit
+    (
+        seq_id SERIAL NOT NULL,
+        payloadseqid CHARACTER VARYING,
+        processid INTEGER,
+        tablename CHARACTER VARYING(64),
+        uniquecolumn CHARACTER VARYING(64),
+        dboperation CHARACTER VARYING(32),
+        syncstatus CHARACTER VARYING(64),
+        retrycount CHARACTER VARYING(64),
+        consumer_err CHARACTER VARYING,
+        producer_err CHARACTER VARYING,
+        payload CHARACTER VARYING,
+        auditdatetime TIMESTAMP(6) WITHOUT TIME ZONE,
+        topicname CHARACTER VARYING(64),
+        UNIQUE (payloadseqid)
+    );
+
 CREATE OR REPLACE FUNCTION "common_oltp"."notify_trigger_common_oltp" ()  RETURNS trigger
   VOLATILE
 AS $body$
