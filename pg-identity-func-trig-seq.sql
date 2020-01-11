@@ -137,18 +137,18 @@ CREATE TRIGGER "pg_user_group_xref_trigger"
 EXECUTE PROCEDURE notify_trigger_common_oltp('user_group_id', 'login_id', 'group_id', 'create_user_id', 'security_status_id');
 
 CREATE TRIGGER "pg_user_trigger"
-  AFTER INSERT OR DELETE OR UPDATE ON user
+  AFTER INSERT OR DELETE OR UPDATE ON "user"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'first_name', 'last_name', 'handle', 'status', 'activation_code', 'reg_source', 'utm_source', 'utm_medium', 'utm_campaign');
 
 --drop SEQUENCE sequence_user_group_seq;
 CREATE SEQUENCE sequence_user_group_seq INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START
-WITH 600000000 NO CYCLE;
+WITH 601000000 NO CYCLE;
 
 
 --drop SEQUENCE sequence_email_seq;
 CREATE SEQUENCE sequence_email_seq INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START
-WITH 60000000 NO CYCLE;
+WITH 70100000 NO CYCLE;
 
 
 SET search_path TO informixoltp;
