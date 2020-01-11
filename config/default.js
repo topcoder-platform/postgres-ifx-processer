@@ -48,6 +48,10 @@ module.exports = {
     RECONSILER_END: process.env.RECONSILER_END || 5,
     RECONSILER_DURATION_TYPE: process.env.RECONSILER_DURATION_TYPE || 'm'
   },
+  DYNAMODB:
+	{
+	DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'test_pg_ifx_payload_sync'
+	},
 
 	AUTH0_URL: process.env.AUTH0_URL ,
 	AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE ,
