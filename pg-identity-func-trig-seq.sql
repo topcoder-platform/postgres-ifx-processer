@@ -195,11 +195,16 @@ CREATE SEQUENCE sequence_email_seq INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036
 WITH 70100000 NO CYCLE;
 
  ---COUNTRY TABLE ADDITIONAL COLUMN
-  --alter table country 
-  --ADD COLUMN iso_name VARCHAR(128),
-  --ADD COLUMN iso_alpha2_code VARCHAR(2),
-  --ADD COLUMN iso_alpha3_code VARCHAR(3);
+  alter table country 
+  ADD COLUMN iso_name VARCHAR(128),
+  ADD COLUMN iso_alpha2_code VARCHAR(2),
+  ADD COLUMN iso_alpha3_code VARCHAR(3);
   --migrate directly from dev/prod database (using ecs run migrator).
+                                  
+ --migrate directly from dev/prod database (using ecs run migrator).
+ ALTER TABLE sso_login_provider 
+ ADD COLUMN identify_email_enabled BOOLEAN NOT NULL default true,
+ ADD COLUMN identify_handle_enabled BOOLEAN NOT NULL default true;                                  
 
 SET search_path TO informixoltp;
 
