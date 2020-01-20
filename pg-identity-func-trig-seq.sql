@@ -181,6 +181,10 @@ EXECUTE PROCEDURE notify_trigger_common_oltp('group_id', 'description', 'challen
   CREATE SEQUENCE payloadsequence INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 
 START WITH 1  NO CYCLE;
                                   
+--drop sequence sequence_user_seq;                              
+CREATE SEQUENCE sequence_user_seq INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH
+110100000 NO CYCLE;
+                                  
 --drop SEQUENCE sequence_user_group_seq;
 CREATE SEQUENCE sequence_user_group_seq INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START
 WITH 601000000 NO CYCLE;
@@ -324,3 +328,11 @@ CREATE TRIGGER "pg_coder"
   AFTER INSERT OR DELETE OR UPDATE ON coder
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'quote', 'coder_type_id', 'comp_country_code', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO pgsyncuser;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO pgsyncuser;
+grant USAGE ON  SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp To pgsyncuser;
+grant USAGE ON  SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp To coder;;
