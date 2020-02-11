@@ -22,8 +22,8 @@ module.exports = {
     database: process.env.PG_DATABASE || 'postgres', // database must exist before running the tool
     password: process.env.PG_PASSWORD || 'password',
     port: parseInt(process.env.PG_PORT, 10) || 5432,
-    triggerFunctions: process.env.TRIGGER_FUNCTIONS || ['db_notifications'], // List of trigger functions to listen to
-    triggerTopics: process.env.TRIGGER_TOPICS || ['db.postgres.sync'], // Names of the topic in the trigger payload
+    triggerFunctions: process.env.TRIGGER_FUNCTIONS || ['dev_db_notifications'], // List of trigger functions to listen to
+    triggerTopics: process.env.TRIGGER_TOPICS || ['dev.db.postgres.sync'], // Names of the topic in the trigger payload
     triggerOriginators: process.env.TRIGGER_ORIGINATORS || ['tc-postgres-delta-processor'] // Names of the originator in the trigger payload
   },
   KAFKA: { // Kafka connection options
@@ -38,6 +38,20 @@ module.exports = {
     errorTopic: process.env.ERROR_TOPIC || 'db.scorecardtable.error',
     recipients: ['admin@abc.com'] // Kafka partitions to use
   },
+  SLACK: {
+    URL: process.env.SLACKURL || 'us-east-1',
+    SLACKCHANNEL: process.env.SLACKCHANNEL || 'ifxpg-migrator',
+    SLACKNOTIFY:  process.env.SLACKNOTIFY || 'false'
+  },
+   RECONSILER:{
+    RECONSILER_START: process.env.RECONSILER_START || 10,
+    RECONSILER_END: process.env.RECONSILER_END || 5,
+    RECONSILER_DURATION_TYPE: process.env.RECONSILER_DURATION_TYPE || 'm'
+  },
+  DYNAMODB:
+	{
+	DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'dev_pg_ifx_payload_sync'
+	},
 
 	AUTH0_URL: process.env.AUTH0_URL ,
 	AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE ,
