@@ -22,9 +22,9 @@ async function setupPgClient() {
      var paramvalues = ['push-to-kafka',rec_d_start,rec_d_end];  
     //var paramvalues = ['push-to-kafka','60002027'];  
     //sql1 = 'select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.syncstatus =($1)'
-    sql1 = " select seq_id, payloadseqid,auditdatetime at time zone 'utc' at time zone 'Asia/Calcutta',syncstatus, payload where pgifx_sync_audit.syncstatus =($1)"
-    sql2 = " and pgifx_sync_audit.auditdatetime >= DATE(NOW()) - INTERVAL '1"+ rec_d_type + "' * ($2)"
-    sql3 = " and pgifx_sync_audit.auditdatetime <= DATE(NOW()) - INTERVAL '1"+ rec_d_type + "' * ($3)"
+    sql1 = "select pgifx_sync_audit.seq_id, payloadseqid,auditdatetime ,syncstatus, payload from pgifx_sync_audit where pgifx_sync_audit.syncstatus =($1)"
+    sql2 = " and pgifx_sync_audit.auditdatetime between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
+    sql3 = " and  (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($3)"
     sql = sql1 + sql2 + sql3
     console.log('sql ', sql)
    // sql3 = ' select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.syncstatus =($1)'
