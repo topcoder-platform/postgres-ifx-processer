@@ -22,8 +22,8 @@ async function setupPgClient() {
     rec_d_start = config.RECONSILER.RECONSILER_START
     rec_d_end = config.RECONSILER.RECONSILER_END
     rec_d_type = config.RECONSILER.RECONSILER_DURATION_TYPE
-     var paramvalues = ['push-to-kafka',rec_d_start,rec_d_end];
-    sql1 = "select pgifx_sync_audit.seq_id, payloadseqid,auditdatetime ,syncstatus, payload from pgifx_sync_audit where pgifx_sync_audit.syncstatus =($1)"
+    var paramvalues = ['push-to-kafka',rec_d_start,rec_d_end];
+    sql1 = "select pgifx_sync_audit.seq_id, pgifx_sync_audit.payloadseqid,pgifx_sync_audit.auditdatetime ,pgifx_sync_audit.syncstatus, pgifx_sync_audit.payload from common_oltp.pgifx_sync_audit where pgifx_sync_audit.syncstatus =($1)"
     sql2 = " and pgifx_sync_audit.auditdatetime between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
     sql3 = " and  (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($3)"
     sql = sql1 + sql2 + sql3
