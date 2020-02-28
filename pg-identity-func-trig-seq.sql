@@ -202,10 +202,27 @@ DECLARE
   column_name TEXT;
   column_value TEXT;
   payload_items TEXT[];
+  pguserval TEXT;
   uniquecolumn TEXT;
   logtime TEXT;
   payloadseqid INTEGER;
 BEGIN
+                                  
+ pguserval := (SELECT current_user);
+ if pguserval = 'pgsyncuser' then
+    RAISE notice 'pgsyncuser name : %', pguserval;
+   
+    CASE TG_OP
+    WHEN 'INSERT', 'UPDATE' THEN
+     rec := NEW;
+     WHEN 'DELETE' THEN
+     rec := OLD;
+     ELSE
+     RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
+    END CASE;
+    return rec;
+   end if;
+   
   CASE TG_OP
   WHEN 'INSERT', 'UPDATE' THEN
      rec := NEW;
