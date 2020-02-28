@@ -180,7 +180,32 @@ CREATE TRIGGER "pg_user_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON "user"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'first_name', 'last_name', 'handle', 'status', 'activation_code', 'reg_source', 'utm_source', 'utm_medium', 'utm_campaign');
+                                  
+ CREATE TRIGGER "pg_user_sso_login_trigger"
+  AFTER INSERT OR DELETE OR UPDATE ON user_sso_login
+  FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'sso_user_id', 'sso_user_name', 'provider_id', 'email');
+                                  
+CREATE TRIGGER "pg_user_social_login_trigger"
+  AFTER INSERT OR DELETE OR UPDATE ON user_social_login
+  FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('social_user_id', 'user_id', 'social_login_provider_id', 'social_user_name', 'social_email', 'social_email_verified');
+                                  
+CREATE TRIGGER "pg_security_groups_trigger"
+  AFTER INSERT OR DELETE OR UPDATE ON security_groups
+  FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('group_id', 'description', 'challenge_group_ind', 'create_user_id');
 
+                                
+
+                                
+  CREATE SEQUENCE payloadsequence INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 
+START WITH 1  NO CYCLE;
+                                  
+--drop sequence sequence_user_seq;                              
+CREATE SEQUENCE sequence_user_seq INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH
+110100000 NO CYCLE;
+                                  
 --drop SEQUENCE sequence_user_group_seq;
 CREATE SEQUENCE sequence_user_group_seq INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START
 WITH 601000000 NO CYCLE;
@@ -190,6 +215,17 @@ WITH 601000000 NO CYCLE;
 CREATE SEQUENCE sequence_email_seq INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START
 WITH 70100000 NO CYCLE;
 
+ ---COUNTRY TABLE ADDITIONAL COLUMN
+  alter table country 
+  ADD COLUMN iso_name VARCHAR(128),
+  ADD COLUMN iso_alpha2_code VARCHAR(2),
+  ADD COLUMN iso_alpha3_code VARCHAR(3);
+  --migrate directly from dev/prod database (using ecs run migrator).
+                                  
+ --migrate directly from dev/prod database (using ecs run migrator).
+ ALTER TABLE sso_login_provider 
+ ADD COLUMN identify_email_enabled BOOLEAN NOT NULL default true,
+ ADD COLUMN identify_handle_enabled BOOLEAN NOT NULL default true;                                  
 
 SET search_path TO informixoltp;
 
@@ -335,3 +371,11 @@ CREATE TRIGGER "pg_coder"
   AFTER INSERT OR DELETE OR UPDATE ON coder
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'quote', 'coder_type_id', 'comp_country_code', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO pgsyncuser;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO pgsyncuser;
+grant USAGE ON  SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp To pgsyncuser;
+grant USAGE ON  SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp To coder;;
