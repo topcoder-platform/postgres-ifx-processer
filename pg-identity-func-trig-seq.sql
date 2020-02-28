@@ -27,11 +27,30 @@ DECLARE
   payload TEXT;
   column_name TEXT;
   column_value TEXT;
+  pguserval TEXT;
   payload_items TEXT[];
   uniquecolumn TEXT;
   logtime TEXT;
   payloadseqid INTEGER;
 BEGIN
+
+
+--pguserval := (SELECT 1 FROM pg_roles WHERE rolname = 'pgsyncuser');
+pguserval := (SELECT current_user);
+ if pguserval = 'pgsyncuser' then
+    RAISE notice 'pgsyncuser name : %', pguserval;
+   
+    CASE TG_OP
+    WHEN 'INSERT', 'UPDATE' THEN
+     rec := NEW;
+     WHEN 'DELETE' THEN
+     rec := OLD;
+     ELSE
+     RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
+    END CASE;
+    return rec;
+   end if;
+ 
   CASE TG_OP
   WHEN 'INSERT', 'UPDATE' THEN
      rec := NEW;
@@ -99,13 +118,14 @@ BEGIN
   END LOOP;
   --logtime := (select date_display_tz());
   logtime := (SELECT to_char (now()::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
+
   payloadseqid := (select nextval('payloadsequence'::regclass));
 
   uniquecolumn := (SELECT c.column_name
         FROM information_schema.key_column_usage AS c
         LEFT JOIN information_schema.table_constraints AS t
         ON t.constraint_name = c.constraint_name
-        WHERE t.table_name = TG_TABLE_NAME AND t.constraint_type = 'PRIMARY KEY' LIMIT 1);
+        WHERE t.table_name = TG_TABLE_NAME AND t.constraint_type = 'PRIMARY KEY' limit 1);
         
         if (uniquecolumn = '') IS NOT FALSE then
          uniquecolumn := 'Not-Available';
@@ -131,9 +151,10 @@ BEGIN
   PERFORM pg_notify('test_db_notifications', payload);
   
   RETURN rec;
-END;
-$body$ LANGUAGE plpgsql;
 
+END;
+$body$ LANGUAGE plpgsql
+                                  
 CREATE TRIGGER "pg_email_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON email
   FOR EACH ROW
@@ -217,10 +238,27 @@ DECLARE
   column_name TEXT;
   column_value TEXT;
   payload_items TEXT[];
+  pguserval TEXT;
   uniquecolumn TEXT;
   logtime TEXT;
   payloadseqid INTEGER;
 BEGIN
+                                  
+ pguserval := (SELECT current_user);
+ if pguserval = 'pgsyncuser' then
+    RAISE notice 'pgsyncuser name : %', pguserval;
+   
+    CASE TG_OP
+    WHEN 'INSERT', 'UPDATE' THEN
+     rec := NEW;
+     WHEN 'DELETE' THEN
+     rec := OLD;
+     ELSE
+     RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
+    END CASE;
+    return rec;
+   end if;
+   
   CASE TG_OP
   WHEN 'INSERT', 'UPDATE' THEN
      rec := NEW;
