@@ -196,9 +196,32 @@ CREATE TRIGGER "pg_security_groups_trigger"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_common_oltp('group_id', 'description', 'challenge_group_ind', 'create_user_id');
 
-                                
+ CREATE TRIGGER "pg_social_login_provider_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON social_login_provider
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('social_login_provider_id', 'name');
 
-                                
+CREATE TRIGGER "pg_sso_login_provider_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON sso_login_provider
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('sso_login_provider_id', 'name','type','identify_email_enabled','identify_handle_enabled');
+
+CREATE TRIGGER "pg_Country_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON Country
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('country_code', 'country_name','modify_date','participating','default_taxform_id','longitude','latitude','region','iso_name','iso_alpha2_code','iso_alpha3_code');
+
+CREATE TRIGGER "pg_invalid_handles_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON invalid_handles
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('invalid_handle_id', 'invalid_handle');
+
+CREATE TRIGGER "pg_achievement_type_lu_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON achievement_type_lu
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('achievement_type_id','achievement_type_desc');
+
+                                                            
   CREATE SEQUENCE payloadsequence INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 
 START WITH 1  NO CYCLE;
                                   
@@ -372,7 +395,12 @@ CREATE TRIGGER "pg_coder"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'quote', 'coder_type_id', 'comp_country_code', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
+CREATE TRIGGER "pg_coder_referral_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON coder_referral
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'referral_id','reference_id','other');
+
+ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO pgsyncuser;
