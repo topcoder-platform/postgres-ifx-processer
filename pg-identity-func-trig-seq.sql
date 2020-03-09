@@ -97,6 +97,13 @@ pguserval := (SELECT current_user);
         else
                 column_value = '1';     
         end if;
+     when
+        column_name = 'social_email_verified' then
+        if column_value = 'false' then
+                column_value = 'f';
+        else
+                column_value = 't';     
+        end if;   
       when  
      column_name = 'create_date' then 
       column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
@@ -119,7 +126,7 @@ pguserval := (SELECT current_user);
   --logtime := (select date_display_tz());
   logtime := (SELECT to_char (now()::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
 
-  payloadseqid := (select nextval('payloadsequence'::regclass));
+  payloadseqid := (select nextval('common_oltp.payloadsequence'::regclass));
 
   uniquecolumn := (SELECT c.column_name
         FROM information_schema.key_column_usage AS c
@@ -155,11 +162,18 @@ pguserval := (SELECT current_user);
 END;
 $body$ LANGUAGE plpgsql
                                   
+--CREATE TRIGGER "pg_email_trigger"
+--  AFTER INSERT OR DELETE OR UPDATE ON email
+--  FOR EACH ROW
+-- EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'email_id', 'email_type_id', 'address', 'primary_ind', 'status_id');
+
 CREATE TRIGGER "pg_email_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON email
   FOR EACH ROW
-EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'email_id', 'email_type_id', 'address', 'primary_ind', 'status_id');
-
+EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'email_id', 'email_type_id', 'address', 'create_date', 'modify_date', 'primary_ind', 'status_id');
+                                  
+  
+                                  
 CREATE TRIGGER "pg_security_user_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON security_user
   FOR EACH ROW
@@ -221,6 +235,42 @@ AFTER INSERT OR DELETE OR UPDATE ON achievement_type_lu
 FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_common_oltp('achievement_type_id','achievement_type_desc');
 
+                                  
+  CREATE OR REPLACE FUNCTION "common_oltp"."proc_email_update" ()  RETURNS trigger
+  VOLATILE
+AS $body$
+DECLARE
+pguserval TEXT;
+BEGIN 
+      if (OLD.email_type_id != NEW.email_type_id) then 
+         insert into common_oltp.audit_user (column_name, old_value, new_value, user_id)
+         values ('EMAIL_TYPE', OLD.email_type_id, NEW.email_type_id, OLD.user_id);
+      End If;
+
+      if (OLD.status_id != NEW.status_id) then 
+         insert into common_oltp.audit_user (column_name, old_value, new_value, user_id)
+         values ('EMAIL_STATUS', OLD.status_id, NEW.status_id, OLD.user_id);
+      End If;
+
+      if (OLD.address != NEW.address) then 
+         insert into common_oltp.audit_user (column_name, old_value, new_value, user_id)
+         values ('EMAIL_ADDRESS', OLD.address, NEW.address, OLD.user_id);
+      End If;
+
+      if (OLD.primary_ind != NEW.primary_ind) then 
+         insert into common_oltp.audit_user (column_name, old_value, new_value, user_id)
+         values ('EMAIL_PRIMARY_IND', OLD.primary_ind, NEW.primary_ind, OLD.user_id);
+      End If;
+
+       pguserval := (SELECT current_user);
+        if pguserval != 'pgsyncuser' then
+         NEW.modify_date = current_timestamp;
+        end if;
+      
+      
+      RETURN NEW;
+END;
+$body$ LANGUAGE plpgsql
                                                             
   CREATE SEQUENCE payloadsequence INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 
 START WITH 1  NO CYCLE;
@@ -349,7 +399,7 @@ BEGIN
   END LOOP;
   --logtime := (select date_display_tz());
   logtime := (SELECT to_char (now()::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
-  payloadseqid := (select nextval('payloadsequence'::regclass));
+  payloadseqid := (select nextval('common_oltp.payloadsequence'::regclass));
 
   uniquecolumn := (SELECT c.column_name
         FROM information_schema.key_column_usage AS c
@@ -390,15 +440,57 @@ CREATE TRIGGER "pg_algo_rating"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'rating', 'vol', 'round_id', 'num_ratings', 'algo_rating_type_id', 'modify_date');
 
+--CREATE TRIGGER "pg_coder"
+--  AFTER INSERT OR DELETE OR UPDATE ON coder
+--  FOR EACH ROW
+-- EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'quote', 'coder_type_id', 'comp_country_code', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
 CREATE TRIGGER "pg_coder"
   AFTER INSERT OR DELETE OR UPDATE ON coder
   FOR EACH ROW
-EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'quote', 'coder_type_id', 'comp_country_code', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
-
+EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'member_since', 'quote', 'modify_date', 'language_id', 'coder_type_id', 'date_of_birth', 'home_country_code', 'comp_country_code', 'contact_date', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
+                                  
+                                  
 CREATE TRIGGER "pg_coder_referral_trigger"
 AFTER INSERT OR DELETE OR UPDATE ON coder_referral
 FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'referral_id','reference_id','other');
+                                  
+                                  
+CREATE OR REPLACE FUNCTION "informixoltp"."proc_coder_update" ()  RETURNS trigger
+  VOLATILE
+AS $body$
+DECLARE
+  pguserval TEXT;
+begin
+    if (OLD.quote != NEW.quote) then
+     insert into audit_coder (column_name, old_value, new_value, user_id)
+     values ('QUOTE', OLD.quote , NEW.quote, OLD.coder_id);
+    end if;
+
+    if (OLD.coder_type_id != NEW.coder_type_id) then
+     insert into audit_coder (column_name, old_value, new_value, user_id)
+     values ('CODER_TYPE', OLD.coder_type_id , NEW.coder_type_id, OLD.coder_id);
+    end if;
+    if (OLD.language_id != NEW.language_id) then
+     insert into audit_coder (column_name, old_value, new_value, user_id)
+     values ('LANGUAGE', OLD.language_id , NEW.language_id, OLD.coder_id);
+    end if;
+    if (OLD.comp_country_code != NEW.comp_country_code) then
+     insert into audit_coder (column_name, old_value, new_value, user_id)
+     values ('COMP_COUNTRY', OLD.comp_country_code , NEW.comp_country_code, OLD.coder_id);
+    end if;
+       pguserval := (SELECT current_user);
+       if pguserval != 'pgsyncuser' then
+     --  RAISE info 'current_user';
+      -- raise notice 'inside current_user  : %', current_user;
+        --update coder set modify_date = current_timestamp where coder_id = OLD.coder_id;
+        NEW.modify_date = current_timestamp;
+        end if;
+        
+    return NEW;
+end ;
+$body$ LANGUAGE plpgsql
+                                  
 
  GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
