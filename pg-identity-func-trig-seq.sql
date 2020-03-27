@@ -110,15 +110,16 @@ pguserval := (SELECT current_user);
       when
          column_name = 'modify_date' then 
        column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
-     -- when
-      --   column_name = 'achievement_date' then 
-      --column_value := (select to_date (column_value, 'MM/DD/YYYY'));
-      --column_value := (select to_date (column_value));
-       --when
-         --column_name = 'password' then 
-         --column_value := regexp_replace(column_value, '\s', '', 'g');
-         --column_value := regexp_replace(column_value, E'[\\n\\r]+', '\n\r', 'g');  
-           else
+     when
+         column_name = 'last_login' then 
+         column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
+      when
+         column_name = 'last_site_hit_date' then 
+         column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
+      when
+         column_name = 'corona_event_timestamp' then 
+         column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
+     else
     -- RAISE NOTICE ' not boolean';
     end case;
     payload_items := array_append(payload_items, '"' || replace(column_name, '"', '\"') || '":"' || replace(column_value, '"', '\"') || '"');
@@ -271,6 +272,8 @@ BEGIN
       RETURN NEW;
 END;
 $body$ LANGUAGE plpgsql
+                                  
+ ALTER SEQUENCE corona_event_corona_event_id_seq RESTART WITH 77770000;
                                                             
   CREATE SEQUENCE payloadsequence INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 
 START WITH 1  NO CYCLE;
