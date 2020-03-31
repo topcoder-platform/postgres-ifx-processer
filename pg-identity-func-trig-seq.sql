@@ -27,11 +27,30 @@ DECLARE
   payload TEXT;
   column_name TEXT;
   column_value TEXT;
+  pguserval TEXT;
   payload_items TEXT[];
   uniquecolumn TEXT;
   logtime TEXT;
   payloadseqid INTEGER;
 BEGIN
+
+
+--pguserval := (SELECT 1 FROM pg_roles WHERE rolname = 'pgsyncuser');
+pguserval := (SELECT current_user);
+ if pguserval = 'pgsyncuser' then
+    RAISE notice 'pgsyncuser name : %', pguserval;
+   
+    CASE TG_OP
+    WHEN 'INSERT', 'UPDATE' THEN
+     rec := NEW;
+     WHEN 'DELETE' THEN
+     rec := OLD;
+     ELSE
+     RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
+    END CASE;
+    return rec;
+   end if;
+ 
   CASE TG_OP
   WHEN 'INSERT', 'UPDATE' THEN
      rec := NEW;
@@ -78,34 +97,43 @@ BEGIN
         else
                 column_value = '1';     
         end if;
+     when
+        column_name = 'social_email_verified' then
+        if column_value = 'false' then
+                column_value = 'f';
+        else
+                column_value = 't';     
+        end if;   
       when  
      column_name = 'create_date' then 
       column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
       when
          column_name = 'modify_date' then 
        column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
-     -- when
-      --   column_name = 'achievement_date' then 
-      --column_value := (select to_date (column_value, 'MM/DD/YYYY'));
-      --column_value := (select to_date (column_value));
-       --when
-         --column_name = 'password' then 
-         --column_value := regexp_replace(column_value, '\s', '', 'g');
-         --column_value := regexp_replace(column_value, E'[\\n\\r]+', '\n\r', 'g');  
-           else
+     when
+         column_name = 'last_login' then 
+         column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
+      when
+         column_name = 'last_site_hit_date' then 
+         column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
+      when
+         column_name = 'corona_event_timestamp' then 
+         column_value := (select to_char (column_value::timestamp, 'YYYY-MM-DD HH24:MI:SS.MS'));
+     else
     -- RAISE NOTICE ' not boolean';
     end case;
     payload_items := array_append(payload_items, '"' || replace(column_name, '"', '\"') || '":"' || replace(column_value, '"', '\"') || '"');
   END LOOP;
   --logtime := (select date_display_tz());
   logtime := (SELECT to_char (now()::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
-  payloadseqid := (select nextval('payloadsequence'::regclass));
+
+  payloadseqid := (select nextval('common_oltp.payloadsequence'::regclass));
 
   uniquecolumn := (SELECT c.column_name
         FROM information_schema.key_column_usage AS c
         LEFT JOIN information_schema.table_constraints AS t
         ON t.constraint_name = c.constraint_name
-        WHERE t.table_name = TG_TABLE_NAME AND t.constraint_type = 'PRIMARY KEY' LIMIT 1);
+        WHERE t.table_name = TG_TABLE_NAME AND t.constraint_type = 'PRIMARY KEY' limit 1);
         
         if (uniquecolumn = '') IS NOT FALSE then
          uniquecolumn := 'Not-Available';
@@ -131,14 +159,22 @@ BEGIN
   PERFORM pg_notify('test_db_notifications', payload);
   
   RETURN rec;
+
 END;
-$body$ LANGUAGE plpgsql;
+$body$ LANGUAGE plpgsql
+                                  
+--CREATE TRIGGER "pg_email_trigger"
+--  AFTER INSERT OR DELETE OR UPDATE ON email
+--  FOR EACH ROW
+-- EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'email_id', 'email_type_id', 'address', 'primary_ind', 'status_id');
 
 CREATE TRIGGER "pg_email_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON email
   FOR EACH ROW
-EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'email_id', 'email_type_id', 'address', 'primary_ind', 'status_id');
-
+EXECUTE PROCEDURE notify_trigger_common_oltp('user_id', 'email_id', 'email_type_id', 'address', 'create_date', 'modify_date', 'primary_ind', 'status_id');
+                                  
+  
+                                  
 CREATE TRIGGER "pg_security_user_trigger"
   AFTER INSERT OR DELETE OR UPDATE ON security_user
   FOR EACH ROW
@@ -175,9 +211,70 @@ CREATE TRIGGER "pg_security_groups_trigger"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_common_oltp('group_id', 'description', 'challenge_group_ind', 'create_user_id');
 
-                                
+ CREATE TRIGGER "pg_social_login_provider_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON social_login_provider
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('social_login_provider_id', 'name');
 
-                                
+CREATE TRIGGER "pg_sso_login_provider_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON sso_login_provider
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('sso_login_provider_id', 'name','type','identify_email_enabled','identify_handle_enabled');
+
+CREATE TRIGGER "pg_Country_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON Country
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('country_code', 'country_name','modify_date','participating','default_taxform_id','longitude','latitude','region','iso_name','iso_alpha2_code','iso_alpha3_code');
+
+CREATE TRIGGER "pg_invalid_handles_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON invalid_handles
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('invalid_handle_id', 'invalid_handle');
+
+CREATE TRIGGER "pg_achievement_type_lu_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON achievement_type_lu
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_common_oltp('achievement_type_id','achievement_type_desc');
+
+                                  
+  CREATE OR REPLACE FUNCTION "common_oltp"."proc_email_update" ()  RETURNS trigger
+  VOLATILE
+AS $body$
+DECLARE
+pguserval TEXT;
+BEGIN 
+      if (OLD.email_type_id != NEW.email_type_id) then 
+         insert into common_oltp.audit_user (column_name, old_value, new_value, user_id)
+         values ('EMAIL_TYPE', OLD.email_type_id, NEW.email_type_id, OLD.user_id);
+      End If;
+
+      if (OLD.status_id != NEW.status_id) then 
+         insert into common_oltp.audit_user (column_name, old_value, new_value, user_id)
+         values ('EMAIL_STATUS', OLD.status_id, NEW.status_id, OLD.user_id);
+      End If;
+
+      if (OLD.address != NEW.address) then 
+         insert into common_oltp.audit_user (column_name, old_value, new_value, user_id)
+         values ('EMAIL_ADDRESS', OLD.address, NEW.address, OLD.user_id);
+      End If;
+
+      if (OLD.primary_ind != NEW.primary_ind) then 
+         insert into common_oltp.audit_user (column_name, old_value, new_value, user_id)
+         values ('EMAIL_PRIMARY_IND', OLD.primary_ind, NEW.primary_ind, OLD.user_id);
+      End If;
+
+       pguserval := (SELECT current_user);
+        if pguserval != 'pgsyncuser' then
+         NEW.modify_date = current_timestamp;
+        end if;
+      
+      
+      RETURN NEW;
+END;
+$body$ LANGUAGE plpgsql
+                                  
+ ALTER SEQUENCE corona_event_corona_event_id_seq RESTART WITH 77770000;
+                                                            
   CREATE SEQUENCE payloadsequence INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 
 START WITH 1  NO CYCLE;
                                   
@@ -207,6 +304,8 @@ WITH 70100000 NO CYCLE;
  ADD COLUMN identify_handle_enabled BOOLEAN NOT NULL default true;                                  
 
 SET search_path TO informixoltp;
+                                  
+alter table payment_detail add column task_id numeric(10,0);                               
 
 CREATE OR REPLACE FUNCTION "informixoltp"."notify_trigger_informixoltp" ()  RETURNS trigger
   VOLATILE
@@ -217,10 +316,27 @@ DECLARE
   column_name TEXT;
   column_value TEXT;
   payload_items TEXT[];
+  pguserval TEXT;
   uniquecolumn TEXT;
   logtime TEXT;
   payloadseqid INTEGER;
 BEGIN
+                                  
+ pguserval := (SELECT current_user);
+ if pguserval = 'pgsyncuser' then
+    RAISE notice 'pgsyncuser name : %', pguserval;
+   
+    CASE TG_OP
+    WHEN 'INSERT', 'UPDATE' THEN
+     rec := NEW;
+     WHEN 'DELETE' THEN
+     rec := OLD;
+     ELSE
+     RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
+    END CASE;
+    return rec;
+   end if;
+   
   CASE TG_OP
   WHEN 'INSERT', 'UPDATE' THEN
      rec := NEW;
@@ -288,7 +404,7 @@ BEGIN
   END LOOP;
   --logtime := (select date_display_tz());
   logtime := (SELECT to_char (now()::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
-  payloadseqid := (select nextval('payloadsequence'::regclass));
+  payloadseqid := (select nextval('common_oltp.payloadsequence'::regclass));
 
   uniquecolumn := (SELECT c.column_name
         FROM information_schema.key_column_usage AS c
@@ -329,12 +445,59 @@ CREATE TRIGGER "pg_algo_rating"
   FOR EACH ROW
 EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'rating', 'vol', 'round_id', 'num_ratings', 'algo_rating_type_id', 'modify_date');
 
+--CREATE TRIGGER "pg_coder"
+--  AFTER INSERT OR DELETE OR UPDATE ON coder
+--  FOR EACH ROW
+-- EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'quote', 'coder_type_id', 'comp_country_code', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
 CREATE TRIGGER "pg_coder"
   AFTER INSERT OR DELETE OR UPDATE ON coder
   FOR EACH ROW
-EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'quote', 'coder_type_id', 'comp_country_code', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
+EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'member_since', 'quote', 'modify_date', 'language_id', 'coder_type_id', 'date_of_birth', 'home_country_code', 'comp_country_code', 'contact_date', 'display_quote', 'quote_location', 'quote_color', 'display_banner', 'banner_style');
+                                  
+                                  
+CREATE TRIGGER "pg_coder_referral_trigger"
+AFTER INSERT OR DELETE OR UPDATE ON coder_referral
+FOR EACH ROW
+EXECUTE PROCEDURE notify_trigger_informixoltp('coder_id', 'referral_id','reference_id','other');
+                                  
+                                  
+CREATE OR REPLACE FUNCTION "informixoltp"."proc_coder_update" ()  RETURNS trigger
+  VOLATILE
+AS $body$
+DECLARE
+  pguserval TEXT;
+begin
+    if (OLD.quote != NEW.quote) then
+     insert into audit_coder (column_name, old_value, new_value, user_id)
+     values ('QUOTE', OLD.quote , NEW.quote, OLD.coder_id);
+    end if;
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
+    if (OLD.coder_type_id != NEW.coder_type_id) then
+     insert into audit_coder (column_name, old_value, new_value, user_id)
+     values ('CODER_TYPE', OLD.coder_type_id , NEW.coder_type_id, OLD.coder_id);
+    end if;
+    if (OLD.language_id != NEW.language_id) then
+     insert into audit_coder (column_name, old_value, new_value, user_id)
+     values ('LANGUAGE', OLD.language_id , NEW.language_id, OLD.coder_id);
+    end if;
+    if (OLD.comp_country_code != NEW.comp_country_code) then
+     insert into audit_coder (column_name, old_value, new_value, user_id)
+     values ('COMP_COUNTRY', OLD.comp_country_code , NEW.comp_country_code, OLD.coder_id);
+    end if;
+       pguserval := (SELECT current_user);
+       if pguserval != 'pgsyncuser' then
+     --  RAISE info 'current_user';
+      -- raise notice 'inside current_user  : %', current_user;
+        --update coder set modify_date = current_timestamp where coder_id = OLD.coder_id;
+        NEW.modify_date = current_timestamp;
+        end if;
+        
+    return NEW;
+end ;
+$body$ LANGUAGE plpgsql
+                                  
+
+ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO coder;
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA common_oltp,informixoltp, corporate_oltp,tcs_catalog, time_oltp TO pgsyncuser;

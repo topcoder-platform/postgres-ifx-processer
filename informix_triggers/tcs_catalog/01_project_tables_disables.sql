@@ -1,0 +1,57 @@
+database tcs_catalog;
+SET triggers informix.ifxpgsync_project_catalog_lu_insert disabled;	SET triggers informix.ifxpgsync_project_catalog_lu_update disabled;	SET triggers informix.ifxpgsync_project_catalog_lu_delete disabled;
+SET triggers informix.ifxpgsync_project_category_lu_insert disabled;	SET triggers informix.ifxpgsync_project_category_lu_update disabled;	SET triggers informix.ifxpgsync_project_category_lu_delete disabled;
+SET triggers informix.ifxpgsync_project_sub_category_lu_insert disabled;	SET triggers informix.ifxpgsync_project_sub_category_lu_update disabled;	SET triggers informix.ifxpgsync_project_sub_category_lu_delete disabled;
+SET triggers informix.ifxpgsync_project_type_lu_insert disabled;	SET triggers informix.ifxpgsync_project_type_lu_update disabled;	SET triggers informix.ifxpgsync_project_type_lu_delete disabled;
+
+SET triggers informix.ifxpgsync_project_status_lu_insert disabled;	SET triggers informix.ifxpgsync_project_status_lu_update disabled;	SET triggers informix.ifxpgsync_project_status_lu_delete disabled;
+
+SET triggers informix.ifxpgsync_project_studio_specification_insert disabled;	SET triggers informix.ifxpgsync_project_studio_specification_update disabled;	SET triggers informix.ifxpgsync_project_studio_specification_delete disabled;
+
+SET triggers informix.ifxpgsync_project_mm_specification_insert disabled;	SET triggers informix.ifxpgsync_project_mm_specification_update disabled;	SET triggers informix.ifxpgsync_project_mm_specification_delete disabled;
+
+SET triggers informix.ifxpgsync_project_spec_insert disabled;	SET triggers informix.ifxpgsync_project_spec_update disabled;	SET triggers informix.ifxpgsync_project_spec_delete disabled;
+SET triggers informix.ifxpgsync_copilot_contest_extra_info_insert disabled;	SET triggers informix.ifxpgsync_copilot_contest_extra_info_update disabled;	SET triggers informix.ifxpgsync_copilot_contest_extra_info_delete disabled;
+SET triggers informix.ifxpgsync_contest_sale_insert disabled;	SET triggers informix.ifxpgsync_contest_sale_update disabled;	SET triggers informix.ifxpgsync_contest_sale_delete disabled;
+SET triggers informix.ifxpgsync_contest_milestone_xref_insert disabled;	SET triggers informix.ifxpgsync_contest_milestone_xref_update disabled;	SET triggers informix.ifxpgsync_contest_milestone_xref_delete disabled;
+
+SET triggers informix.ifxpgsync_project_copilot_type_insert disabled;	SET triggers informix.ifxpgsync_project_copilot_type_update disabled;	SET triggers informix.ifxpgsync_project_copilot_type_delete disabled;
+SET triggers informix.ifxpgsync_project_file_type_xref_insert disabled;	SET triggers informix.ifxpgsync_project_file_type_xref_update disabled;	SET triggers informix.ifxpgsync_project_file_type_xref_delete disabled;
+
+SET triggers informix.ifxpgsync_project_info_insert disabled;	SET triggers informix.ifxpgsync_project_info_update disabled;	SET triggers informix.ifxpgsync_project_info_delete disabled;
+SET triggers informix.ifxpgsync_project_milestone_insert disabled;	SET triggers informix.ifxpgsync_project_milestone_update disabled;	SET triggers informix.ifxpgsync_project_milestone_delete disabled;
+SET triggers informix.ifxpgsync_project_milestone_owner_insert disabled;	SET triggers informix.ifxpgsync_project_milestone_owner_update disabled;	SET triggers informix.ifxpgsync_project_milestone_owner_delete disabled;
+
+SET triggers informix.ifxpgsync_phase_criteria_insert disabled;	SET triggers informix.ifxpgsync_phase_criteria_update disabled;	SET triggers informix.ifxpgsync_phase_criteria_delete disabled;
+
+SET triggers informix.ifxpgsync_phase_criteria_type_lu_insert disabled;	SET triggers informix.ifxpgsync_phase_criteria_type_lu_update disabled;	SET triggers informix.ifxpgsync_phase_criteria_type_lu_delete disabled;
+SET triggers informix.ifxpgsync_phase_dependency_insert disabled;	SET triggers informix.ifxpgsync_phase_dependency_update disabled;	SET triggers informix.ifxpgsync_phase_dependency_delete disabled;
+
+SET triggers informix.ifxpgsync_prize_insert disabled;	SET triggers informix.ifxpgsync_prize_update disabled;	SET triggers informix.ifxpgsync_prize_delete disabled;
+SET triggers informix.ifxpgsync_project_platform_insert disabled;	SET triggers informix.ifxpgsync_project_platform_update disabled;	SET triggers informix.ifxpgsync_project_platform_delete disabled;
+
+SET triggers informix.ifxpgsync_project_insert disabled;	SET triggers informix.ifxpgsync_project_update disabled;	SET triggers informix.ifxpgsync_project_delete disabled;
+SET triggers informix.ifxpgsync_project_phase_insert disabled;	SET triggers informix.ifxpgsync_project_phase_update disabled;	SET triggers informix.ifxpgsync_project_phase_delete disabled;
+SET triggers informix.ifxpgsync_project_user_audit_insert disabled;	SET triggers informix.ifxpgsync_project_user_audit_update disabled;	SET triggers informix.ifxpgsync_project_user_audit_delete disabled;
+
+SET triggers informix.ifxpgsync_project_payment_adjustment_insert disabled;	SET triggers informix.ifxpgsync_project_payment_adjustment_update disabled;	SET triggers informix.ifxpgsync_project_payment_adjustment_delete disabled;
+SET triggers informix.ifxpgsync_project_reliability_insert disabled;	SET triggers informix.ifxpgsync_project_reliability_update disabled;	SET triggers informix.ifxpgsync_project_reliability_delete disabled;
+SET triggers informix.ifxpgsync_project_result_insert disabled;	SET triggers informix.ifxpgsync_project_result_update disabled;	SET triggers informix.ifxpgsync_project_result_delete disabled;
+
+SET triggers informix.ifxpgsync_late_deliverable_insert disabled;	SET triggers informix.ifxpgsync_late_deliverable_update disabled;	SET triggers informix.ifxpgsync_late_deliverable_delete disabled;
+SET triggers informix.ifxpgsync_linked_project_xref_insert disabled;	SET triggers informix.ifxpgsync_linked_project_xref_update disabled;	
+SET triggers informix.ifxpgsync_linked_project_xref_delete disabled;
+
+SET triggers informix.ifxpgsync_notification_insert disabled;	SET triggers informix.ifxpgsync_notification_update disabled;	SET triggers informix.ifxpgsync_notification_delete disabled;
+SET triggers informix.ifxpgsync_review_insert disabled;	SET triggers informix.ifxpgsync_review_update disabled;	SET triggers informix.ifxpgsync_review_delete disabled;
+SET triggers informix.ifxpgsync_reviewer_rating_insert disabled;	SET triggers informix.ifxpgsync_reviewer_rating_update disabled;	SET triggers informix.ifxpgsync_reviewer_rating_delete disabled;
+
+
+SET triggers informix.ifxpgsync_review_feedback_insert disabled;	SET triggers informix.ifxpgsync_review_feedback_update disabled;	SET triggers informix.ifxpgsync_review_feedback_delete disabled;
+
+SET triggers informix.ifxpgsync_review_auction_insert disabled;	SET triggers informix.ifxpgsync_review_auction_update disabled;	SET triggers informix.ifxpgsync_review_auction_delete disabled;
+
+SET triggers informix.ifxpgsync_resource_insert disabled;	SET triggers informix.ifxpgsync_resource_update disabled;	SET triggers informix.ifxpgsync_resource_delete disabled;
+SET triggers informix.ifxpgsync_software_competition_pipeline_info_insert disabled;	SET triggers informix.ifxpgsync_software_competition_pipeline_info_update disabled;	SET triggers informix.ifxpgsync_software_competition_pipeline_info_delete disabled;
+SET triggers informix.ifxpgsync_team_header_insert disabled;	SET triggers informix.ifxpgsync_team_header_update disabled;	SET triggers informix.ifxpgsync_team_header_delete disabled;
+SET triggers informix.ifxpgsync_upload_insert disabled;	SET triggers informix.ifxpgsync_upload_update disabled;	SET triggers informix.ifxpgsync_upload_delete disabled;

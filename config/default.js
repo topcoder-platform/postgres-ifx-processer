@@ -44,13 +44,14 @@ module.exports = {
     SLACKNOTIFY:  process.env.SLACKNOTIFY || 'false'
   },
    RECONSILER:{
-    RECONSILER_START: process.env.RECONSILER_START || 10,
-    RECONSILER_END: process.env.RECONSILER_END || 5,
+    RECONSILER_START: process.env.RECONSILER_START || 5,
+    RECONSILER_END: process.env.RECONSILER_END || 1,
     RECONSILER_DURATION_TYPE: process.env.RECONSILER_DURATION_TYPE || 'm'
   },
   DYNAMODB:
 	{
-	DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'dev_pg_ifx_payload_sync'
+	DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'dev_pg_ifx_payload_sync',
+  	DD_ElapsedTime: process.env.DD_ElapsedTime || 600000
 	},
 
 	AUTH0_URL: process.env.AUTH0_URL ,
