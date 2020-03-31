@@ -304,6 +304,8 @@ WITH 70100000 NO CYCLE;
  ADD COLUMN identify_handle_enabled BOOLEAN NOT NULL default true;                                  
 
 SET search_path TO informixoltp;
+                                  
+alter table payment_detail add column task_id numeric(10,0);                               
 
 CREATE OR REPLACE FUNCTION "informixoltp"."notify_trigger_informixoltp" ()  RETURNS trigger
   VOLATILE
