@@ -26,6 +26,12 @@ try {
     pgClient.on('notification', async (message) => {
       try {
 	payloadcopy = ""
+	 logger.debug('Entering producer 1')     
+	  logger.debug(message.toString())
+	   logger.debug('Entering producer 2')
+	logger.debug(message)
+	   logger.debug('Entering producer 3')
+	logger.debug(JSON.stringify(message.payload))   
         const payload = JSON.parse(message.payload)
 	payloadcopy = message
         const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
