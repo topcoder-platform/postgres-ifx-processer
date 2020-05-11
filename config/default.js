@@ -50,8 +50,8 @@ module.exports = {
   },
   DYNAMODB:
 	{
-	DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'dev_pg_ifx_payload_sync'
-  DD_ElapsedTime: process.env.DD_ElapsedTime || 600000
+	DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'dev_pg_ifx_payload_sync',
+  	DD_ElapsedTime: process.env.DD_ElapsedTime || 600000
 	},
 
 	AUTH0_URL: process.env.AUTH0_URL ,
