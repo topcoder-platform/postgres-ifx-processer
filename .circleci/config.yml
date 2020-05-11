@@ -9,7 +9,7 @@ install_dependency: &install_dependency
             sudo apt install jq
             sudo pip install awscli --upgrade
             sudo pip install docker-compose
-            sudo apt-get install default-jdk
+            sudo apt-get install default-jdk --fix-missing
 install_deploysuite: &install_deploysuite
           name: Installation of install_deploysuite.
           #Git Clone -change back to v1.3 or latest once counter var is generalized.
