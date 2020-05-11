@@ -3,7 +3,7 @@ const informix = require('../common/informixWrapper')
 const logger = require('../common/logger')
 
 async function updateInformix (payload) {
-  logger.debug(`Received payload at updateinformix : ${payload}`)
+  logger.debug(`Received payload at updateinformix stringify : ${JSON.stringify(payload)}`)
   logger.debug('=====Starting to update informix with data:====')
   const operation = payload.payload.operation.toLowerCase()
   console.log("Informix DML Operation :",operation)
@@ -37,7 +37,7 @@ async function updateInformix (payload) {
     case 'delete':
       {
         //sql = `delete from ${payload.payload.schema}:${payload.payload.table} where ${primaryKey}=${columns[primaryKey]};`
-	 sql = `delete from ${payload.payload.schema}:${payload.payload.table} where ${primaryKey}= ?};`
+	 sql = `delete from ${payload.payload.schema}:${payload.payload.table} where ${primaryKey}= ?;`
 	 t0.push(`{"value":"${columns[primaryKey]}"}`)
 	 paramvalue = "[" + `${t0}` + "]"
       }
@@ -48,14 +48,16 @@ async function updateInformix (payload) {
 
   //const result = await informix.executeQuery(payload.payload.schema, sql, null)
   //return result
-  //Preparedstatement for informix 
+	
+  //Preparedstatement for informix
+  logger.debug(`Before JSON conversion Parameter values are : ${paramvalue}`);
   var finalparam = JSON.parse(paramvalue)
   console.log(`Typeof finalparam : ${typeof(finalparam)}`)
   if (finalparam.constructor === Array ) console.log('isarray')
    else console.log('finalparam not an array')
      
   const result = await informix.executeQuery(payload.payload.schema, sql, finalparam)
-  return result.then((res)=>{logger.debug("Preparedstmt Result status : ",res)}).catch((e) => {logger.debug("Preparedstmt Result status error", e)})
+  return result.then((res)=>{logger.debug(`Preparedstmt Result status : ${res}`)}).catch((e) => {logger.debug(`Preparedstmt Result error  ${e}`)})
 }
 
 module.exports = updateInformix
