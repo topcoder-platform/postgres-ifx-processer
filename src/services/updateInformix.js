@@ -3,7 +3,7 @@ const informix = require('../common/informixWrapper')
 const logger = require('../common/logger')
 
 async function updateInformix (payload) {
-  logger.debug(`Received payload at updateinformix stringify : ${JSON.stringify(payload)}`)
+  logger.debug(`updateinformix received payload -stringify : ${JSON.stringify(payload)}`)
   logger.debug('=====Starting to update informix with data:====')
   const operation = payload.payload.operation.toLowerCase()
   console.log("Informix DML Operation :",operation)
@@ -12,7 +12,7 @@ async function updateInformix (payload) {
 	let paramvalue = null
 
         const columns = payload.payload.data
-	logger.debug(`Columns details at updateinformix : ${columns}`)
+	logger.debug(`updateinformix columns details : ${JSON.stringify(columns)}`)
         const primaryKey = payload.payload.Uniquecolumn
   // Build SQL query
   switch (operation) {
