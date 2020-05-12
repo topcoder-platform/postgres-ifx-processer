@@ -49,7 +49,7 @@ let cs_payloadseqid
     let message
     try {
       message = JSON.parse(m.message.value)
-      logger.debug(`Received from kafka :${JSON.stringify(message)}`)
+      logger.debug(`Consumer Received from kafka :${JSON.stringify(message)}`)
       if (message.payload.payloadseqid) cs_payloadseqid = message.payload.payloadseqid;
       logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
        await updateInformix(message)
