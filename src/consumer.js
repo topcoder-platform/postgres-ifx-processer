@@ -48,11 +48,13 @@ let cs_payloadseqid
 	for (const m of messageSet) { // Process messages sequentially
     let message
     try {
+      let ifxstatus = 0
       message = JSON.parse(m.message.value)
       logger.debug(`Consumer Received from kafka :${JSON.stringify(message)}`)
       if (message.payload.payloadseqid) cs_payloadseqid = message.payload.payloadseqid;
       logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
-       await updateInformix(message)
+       ifxstatus = await updateInformix(message)
+       logger.debug(`Consumer : Informix return status : ${ifxstatus}`)
       await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit offset only on success
 	if (message.payload['retryCount']) retryvar = message.payload.retryCount;
        auditTrail([cs_payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
