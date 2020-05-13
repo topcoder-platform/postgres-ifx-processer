@@ -57,7 +57,8 @@ async function updateInformix (payload) {
    else console.log('finalparam not an array')
      
   const result = await informix.executeQuery(payload.payload.schema, sql, finalparam)
-  return result.then((res)=>{logger.debug(`Preparedstmt Result status : ${res}`)}).catch((e) => {logger.debug(`Preparedstmt Result error  ${e}`)})
+  //return result.then((res)=>{logger.debug(`Preparedstmt Result status : ${res}`)}).catch((e) => {logger.debug(`Preparedstmt Result error  ${e}`)})
+  return result
 }
 
 module.exports = updateInformix
