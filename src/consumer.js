@@ -151,9 +151,13 @@ if(config.SLACK.SLACKNOTIFY === 'true') {
  */
 async function setupKafkaConsumer() {
   try {
-    await consumer.init()
+   const strategies = [{
+      subscriptions: [kafkaOptions.topic],
+      handler: dataHandler
+    }];
+    await consumer.init(strategies)
     //await consumer.subscribe(kafkaOptions.topic, kafkaOptions.partition, { time: Kafka.LATEST_OFFSET }, dataHandler)
-    await consumer.subscribe(kafkaOptions.topic, dataHandler)
+    //await consumer.subscribe(kafkaOptions.topic, dataHandler)
 	  
     logger.info('Initialized kafka consumer')
     healthcheck.init([check])
