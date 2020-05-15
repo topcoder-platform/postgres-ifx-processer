@@ -10,8 +10,19 @@ const healthcheck = require('topcoder-healthcheck-dropin');
 const auditTrail = require('./services/auditTrail');
 const kafkaOptions = config.get('KAFKA')
 const postMessage = require('./services/posttoslack')
-const isSslEnabled = kafkaOptions.SSL && kafkaOptions.SSL.cert && kafkaOptions.SSL.key
-const consumer = new Kafka.SimpleConsumer({
+//const isSslEnabled = kafkaOptions.SSL && kafkaOptions.SSL.cert && kafkaOptions.SSL.key
+
+const options = {
+  groupId: kafkaOptions.KAFKA_GROUP_ID,
+  connectionString: kafkaOptions.KAFKA_URL,
+  ssl: {
+    cert: kafkaOptions.KAFKA_CLIENT_CERT,
+    key: kafkaOptions.KAFKA_CLIENT_CERT_KEY
+  }
+};
+const consumer = new Kafka.GroupConsumer(options);
+
+/*const consumer = new Kafka.SimpleConsumer({
   connectionString: kafkaOptions.brokers_url,
   ...(isSslEnabled && { // Include ssl options if present
     ssl: {
@@ -19,7 +30,7 @@ const consumer = new Kafka.SimpleConsumer({
       key: kafkaOptions.SSL.key
     }
   })
-})
+})*/
 
 const check = function () {
   if (!consumer.client.initialBrokers && !consumer.client.initialBrokers.length) {
