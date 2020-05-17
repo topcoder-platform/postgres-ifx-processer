@@ -58,7 +58,7 @@ async function dataHandler(messageSet, topic, partition) {
         for (const m of messageSet) { // Process messages sequentially
     let message
     try {
-     // let ifxstatus = 0
+      let ifxstatus = 0
       let cs_payloadseqid;
       message = JSON.parse(m.message.value)
       //logger.debug(`Consumer Received from kafka :${JSON.stringify(message)}`)
@@ -105,7 +105,7 @@ logger.debug(`Consumer : At retry function`)
     if (message.payload.retryCount >= config.KAFKA.maxRetry) {
       logger.debug('Reached at max retry counter, sending it to error queue: ', config.KAFKA.errorTopic);
       logger.debug(`error-sync: consumer max-retry-limit reached`)
-      awuditait callposttoslack(`error-sync: postgres-ifx-processor : consumer max-retry-limit reached: "${message.payload.table}": payloadseqid : "${cs_payloadseqid}"`)
+      //await callposttoslack(`error-sync: postgres-ifx-processor : consumer max-retry-limit reached: "${message.payload.table}": payloadseqid : "${cs_payloadseqid}"`)
       let notifiyMessage = Object.assign({}, message, { topic: config.KAFKA.errorTopic })
       notifiyMessage.payload['recipients'] = config.KAFKA.recipients
       logger.debug('pushing following message on kafka error alert queue:')
@@ -115,7 +115,7 @@ logger.debug(`Consumer : At retry function`)
     }
     message.payload['retryCount'] = message.payload.retryCount + 1;
     await pushToKafka(message)
-    var errmsg9 = `error-sync: Retry for Kafka push : retrycount : "${message.payload.retryCount}" : "${cs_payloadseqid}"`
+    var errmsg9 = `consumer : Retry for Kafka push : retrycount : "${message.payload.retryCount}" : "${cs_payloadseqid}"`
     logger.debug(errmsg9)
   }
   catch (err) {
@@ -124,7 +124,7 @@ logger.debug(`Consumer : At retry function`)
     const errmsg1 = `error-sync: postgres-ifx-processor: consumer : Error-republishing: "${err.message}"`
     logger.error(errmsg1)
     logger.debug(`error-sync: consumer re-publishing "${err.message}"`)
-    await callposttoslack(errmsg1)
+   // await callposttoslack(errmsg1)
   }
 }
 
