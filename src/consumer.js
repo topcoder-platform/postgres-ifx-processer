@@ -55,63 +55,80 @@ const terminate = () => process.exit()
 var retryvar="";
 //let cs_payloadseqid;
 async function dataHandler(messageSet, topic, partition) {
-let cs_payloadseqid
-	for (const m of messageSet) { // Process messages sequentially
+        for (const m of messageSet) { // Process messages sequentially
     let message
     try {
      // let ifxstatus = 0
+      let cs_payloadseqid;
       message = JSON.parse(m.message.value)
-      logger.debug(`Consumer Received from kafka :${JSON.stringify(message)}`)
+      //logger.debug(`Consumer Received from kafka :${JSON.stringify(message)}`)
       if (message.payload.payloadseqid) cs_payloadseqid = message.payload.payloadseqid;
       logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
-       await updateInformix(message)
-       //ifxstatus = await updateInformix(message)
-       //logger.debug(`Consumer : Informix return status : ${ifxstatus}`)
-      await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit offset only on success
-	if (message.payload['retryCount']) retryvar = message.payload.retryCount;
+       //await updateInformix(message)
+       ifxstatus = await updateInformix(message)
+       if (ifxstatus === 0 && `${message.payload.operation}` === 'INSERT') {
+        logger.debug(`Consumer :informixt status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus} - Retrying`)
+
        auditTrail([cs_payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
-            message.payload.operation,"Informix-updated",retryvar,"","",JSON.stringify(message), message.timestamp,message.topic],'consumer')
-    } catch (err) {
-      const errmsg2 = `error-sync: Could not process kafka message or informix DB error: "${err.message}"`  
+            message.payload.operation,"push-to-kafka",retryvar,"","",JSON.stringify(message), new Date(),message.topic],'consumer')
+         await retrypushtokakfa(message,topic,m,partition)
+      }
+      else {
+        if (message.payload['retryCount']) retryvar = message.payload.retryCount;
+       auditTrail([cs_payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
+       message.payload.operation,"Informix-updated",retryvar,"","",JSON.stringify(message), new Date(),message.topic],'consumer')
+      logger.debug(`Consumer :informix status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
+      await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit offset only on success
+    } }catch (err) {
+      const errmsg2 = `error-sync: Could not process kafka message or informix DB error: "${err.message}"`
       logger.error(errmsg2)
-      logger.debug(`error-sync: consumer "${err.message}"`) 
+      logger.debug(`error-sync: consumer "${err.message}"`)
+      await retrypushtokakfa(message,topic,m,partition)
+    }
+  }
+}
+
+async function retrypushtokakfa(message,topic,m,partition)
+{
+let cs_payloadseqid
+logger.debug(`Consumer : At retry function`)
        if (!cs_payloadseqid){
-	    cs_payloadseqid= 'err-'+(new Date()).getTime().toString(36) + Math.random().toString(36).slice(2);}
-/*	     await auditTrail([cs_payloadseqid,3333,'message.payload.table','message.payload.Uniquecolumn',
-           'message.payload.operation',"Error-Consumer","",err.message,"",'message.payload.data',new Date(),'message.topic'],'consumer')
-       }else{
-	       auditTrail([cs_payloadseqid,4444,message.payload.table,message.payload.Uniquecolumn,
-            message.payload.operation,"Informix-updated",retryvar,"consumer2","",JSON.stringify(message), message.timestamp,message.topic],'consumer')
-                   }*/
-	    
-      try {
-	if (message.payload['retryCount']) retryvar = message.payload.retryCount;
-        await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit success as will re-publish
-	logger.debug(`Trying to push same message after adding retryCounter`)
-        if (!message.payload.retryCount) {
-          message.payload.retryCount = 0
-          logger.debug('setting retry counter to 0 and max try count is : ', config.KAFKA.maxRetry);
-        }
-        if (message.payload.retryCount >= config.KAFKA.maxRetry) {
-          logger.debug('Recached at max retry counter, sending it to error queue: ', config.KAFKA.errorTopic);
-          logger.debug(`error-sync: consumer max-retry-limit reached`) 
-              // push to slack - alertIt("slack message"
-          await callposttoslack(`error-sync: postgres-ifx-processor : consumer max-retry-limit reached: "${message.payload.table}": payloadseqid : "${cs_payloadseqid}"`)
-	  let notifiyMessage = Object.assign({}, message, { topic: config.KAFKA.errorTopic })
-          notifiyMessage.payload['recipients'] = config.KAFKA.recipients
-          logger.debug('pushing following message on kafka error alert queue:')
-          //logger.debug(notifiyMessage)
-	  await pushToKafka(notifiyMessage)
-          return
-        }
-        message.payload['retryCount'] = message.payload.retryCount + 1;
-        await pushToKafka(message)
-	var errmsg9 = `error-sync: Retry for Kafka push : retrycount : "${message.payload.retryCount}" : "${cs_payloadseqid}"`
-     logger.debug(errmsg9)
-     //await callposttoslack(errmsg9)
-      } catch (err) {
-        
-   await auditTrail([cs_payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
+            cs_payloadseqid= 'err-'+(new Date()).getTime().toString(36) + Math.random().toString(36).slice(2);}
+  try {
+    if (message.payload['retryCount']) retryvar = message.payload.retryCount;
+    await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit success as will re-publish
+    logger.debug(`Trying to push same message after adding retryCounter`)
+    if (!message.payload.retryCount) {
+      message.payload.retryCount = 0
+      logger.debug('setting retry counter to 0 and max try count is : ', config.KAFKA.maxRetry);
+    }
+    if (message.payload.retryCount >= config.KAFKA.maxRetry) {
+      logger.debug('Reached at max retry counter, sending it to error queue: ', config.KAFKA.errorTopic);
+      logger.debug(`error-sync: consumer max-retry-limit reached`)
+      await callposttoslack(`error-sync: postgres-ifx-processor : consumer max-retry-limit reached: "${message.payload.table}": payloadseqid : "${cs_payloadseqid}"`)
+      let notifiyMessage = Object.assign({}, message, { topic: config.KAFKA.errorTopic })
+      notifiyMessage.payload['recipients'] = config.KAFKA.recipients
+      logger.debug('pushing following message on kafka error alert queue:')
+      //retry push to error topic kafka again
+      await pushToKafka(notifiyMessage)
+      return
+    }
+    message.payload['retryCount'] = message.payload.retryCount + 1;
+    await pushToKafka(message)
+    var errmsg9 = `error-sync: Retry for Kafka push : retrycount : "${message.payload.retryCount}" : "${cs_payloadseqid}"`
+    logger.debug(errmsg9)
+  }
+  catch (err) {
+    await auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
+    message.payload.operation, "Error-republishing", message.payload['retryCount'], err.message, "", message.payload.data, new Date(), message.topic], 'consumer')
+    const errmsg1 = `error-sync: postgres-ifx-processor: consumer : Error-republishing: "${err.message}"`
+    logger.error(errmsg1)
+    logger.debug(`error-sync: consumer re-publishing "${err.message}"`)
+    await callposttoslack(errmsg1)
+  }
+}
+
+await auditTrail([cs_payloadseqid,cs_processId,message.payload.table,message.payload.Uniquecolumn,
             message.payload.operation,"Error-republishing",message.payload['retryCount'],err.message,"",message.payload.data, message.timestamp,message.topic],'consumer')
 	      const errmsg1 = `error-sync: postgres-ifx-processor: consumer : Error-republishing: "${err.message}"`
 	      logger.error(errmsg1)
