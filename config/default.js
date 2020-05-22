@@ -34,7 +34,7 @@ module.exports = {
     },
     topic: process.env.KAFKA_TOPIC || 'db.topic.sync', // Kafka topic to push and receive messages
     partition: process.env.partition || [0], // Kafka partitions to use
-    maxRetry: process.env.MAX_RETRY || 3,
+    maxRetry: process.env.MAX_RETRY || 10,
     errorTopic: process.env.ERROR_TOPIC || 'db.scorecardtable.error',
     recipients: ['admin@abc.com'], // Kafka partitions to use,
     KAFKA_URL: process.env.KAFKA_URL,
