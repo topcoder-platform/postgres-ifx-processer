@@ -43,7 +43,7 @@ async function updateInformix (payload) {
 
   //Preparedstatement for informix
   t0.forEach((name, index) => t0[index] = `${name.escapeSpecialChars()}`);
-  logger.debug(`Param values : {t0}`);
+  logger.debug(`Param values : ${t0}`);
   var temp1 = "[" + `${t0}` + "]"
   var finalparam = JSON.parse(temp1)
   
