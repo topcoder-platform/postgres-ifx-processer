@@ -42,14 +42,14 @@ async function updateInformix(payload) {
 
   //Preparedstatement for informix
   t0.forEach((name, index) => t0[index] = `${name.escapeSpecialChars()}`);
-  logger.debug(`Param values : ${t0}`);
+  //logger.debug(`Param values : ${t0}`);
   let temp1 = "[" + `${t0}` + "]"
   let finalparam = JSON.parse(temp1)
 
   /*console.log(`Typeof finalparam : ${typeof(finalparam)}`)
   if (finalparam.constructor === Array ) console.log('isarray')
   else console.log('finalparam not an array')*/
-  logger.debug(`Operation ${operation} : Final sql and param values are - ${sql} ${finalparam}`);
+  logger.debug(`Final sql and param values are -- ${sql} ${JSON.stringify(finalparam)}`);
   const result = await informix.executeQuery(payload.payload.schema, sql, finalparam)
   return result
 }
