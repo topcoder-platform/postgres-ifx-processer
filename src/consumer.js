@@ -58,10 +58,10 @@ async function dataHandler(messageSet, topic, partition) {
       //await updateInformix(message)
       ifxstatus = await updateInformix(message)
       if (ifxstatus === 0 && `${message.payload.operation}` === 'INSERT') {
+        logger.debug(`operation : ${message.payload.operation}`)
         logger.debug(`Consumer :informixt status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus} - Retrying`)
-
-        auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
-          message.payload.operation, "push-to-kafka", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')
+       // auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
+       //   message.payload.operation, "push-to-kafka", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')
         await retrypushtokakfa(message, topic, m, partition)
       } else {
         if (message.payload['retryCount']) retryvar = message.payload.retryCount;
@@ -82,6 +82,7 @@ async function dataHandler(messageSet, topic, partition) {
 
 async function retrypushtokakfa(message, topic, m, partition) {
   let cs_payloadseqid
+  if (message.payload.payloadseqid) cs_payloadseqid = message.payload.payloadseqid;
   logger.debug(`Consumer : At retry function`)
   if (!cs_payloadseqid) {
     cs_payloadseqid = 'err-' + (new Date()).getTime().toString(36) + Math.random().toString(36).slice(2);
