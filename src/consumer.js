@@ -57,18 +57,18 @@ async function dataHandler(messageSet, topic, partition) {
       logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
       //await updateInformix(message)
       ifxstatus = await updateInformix(message)
-      if (ifxstatus === 0 && `${message.payload.operation}` === 'INSERT') {
-        logger.debug(`operation : ${message.payload.operation}`)
-        logger.debug(`Consumer :informixt status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus} - Retrying`)
+     // if (ifxstatus === 0 && `${message.payload.operation}` === 'INSERT') {
+     //   logger.debug(`operation : ${message.payload.operation}`)
+    //    logger.debug(`Consumer :informixt status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus} - Retrying`)
        // auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
        //   message.payload.operation, "push-to-kafka", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')
-        await retrypushtokakfa(message, topic, m, partition)
-      } else {
+      //  await retrypushtokakfa(message, topic, m, partition)
+      //} else {
+        logger.debug(`Consumer :informix status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
         if (message.payload['retryCount']) retryvar = message.payload.retryCount;
         auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
-          message.payload.operation, "Informix-updated", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')
-        logger.debug(`Consumer :informix status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
-      }
+          message.payload.operation, "Informix-updated", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')       
+      //}
     } catch (err) {
       const errmsg2 = `error-sync: Could not process kafka message or informix DB error: "${err.message}"`
       logger.error(errmsg2)
