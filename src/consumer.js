@@ -66,7 +66,7 @@ async function dataHandler(messageSet, topic, partition) {
       //} else {
         logger.debug(`Consumer :informix status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
         if (message.payload['retryCount']) retryvar = message.payload.retryCount;
-        auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
+        await auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
           message.payload.operation, "Informix-updated", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')       
       //}
     } catch (err) {
