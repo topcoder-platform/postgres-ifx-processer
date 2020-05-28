@@ -22,8 +22,8 @@ module.exports = {
     database: process.env.PG_DATABASE || 'postgres', // database must exist before running the tool
     password: process.env.PG_PASSWORD || 'password',
     port: parseInt(process.env.PG_PORT, 10) || 5432,
-    triggerFunctions: process.env.TRIGGER_FUNCTIONS || ['test_db_notifications'], // List of trigger functions to listen to
-    triggerTopics: process.env.TRIGGER_TOPICS || ['test.db.postgres.sync'], // Names of the topic in the trigger payload
+    triggerFunctions: process.env.TRIGGER_FUNCTIONS || ['dev_db_notifications_2'], // List of trigger functions to listen to
+    triggerTopics: process.env.TRIGGER_TOPICS || ['dev.db.postgres.sync'], // Names of the topic in the trigger payload
     triggerOriginators: process.env.TRIGGER_ORIGINATORS || ['tc-postgres-delta-processor'] // Names of the originator in the trigger payload
   },
   KAFKA: { // Kafka connection options
