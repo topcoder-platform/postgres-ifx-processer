@@ -20,18 +20,19 @@ async function setupPgClient() {
 var payloadcopy 
 try {
     await pgClient.connect()
-    for (const triggerFunction of pgOptions.triggerFunctions) {
+    //for (const triggerFunction of pgOptions.triggerFunctions) {
+    for (const triggerFunction of pgOptions.triggerFunctions.split(',')) {
       await pgClient.query(`LISTEN ${triggerFunction}`)
     }
     pgClient.on('notification', async (message) => {
       try {
 	payloadcopy = ""
-	 logger.debug('Entering producer 1')     
-	  logger.debug(message.toString())
-	   logger.debug('Entering producer 2')
+	 //logger.debug('Entering producer 1')     
+	 // logger.debug(message.toString())
+	logger.debug('Entering producer 2')
 	logger.debug(message)
-	   logger.debug('Entering producer 3')
-	logger.debug(JSON.stringify(message.payload))   
+	//logger.debug('Entering producer 3')
+	//logger.debug(JSON.stringify(message.payload))   
 	      
         const payload = JSON.parse(message.payload)
 	
