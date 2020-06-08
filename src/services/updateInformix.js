@@ -51,6 +51,7 @@ async function updateInformix(payload) {
   else console.log('finalparam not an array')*/
   logger.debug(`Final sql and param values are -- ${sql} ${JSON.stringify(finalparam)}`);
   const result = await informix.executeQuery(payload.payload.schema, sql, finalparam)
+  logger.debug(`ifx execute query result : ${result}`)
   return result
 }
 
