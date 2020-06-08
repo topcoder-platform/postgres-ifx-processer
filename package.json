@@ -17,7 +17,7 @@
   "dependencies": {
     "aws-sdk": "*",
     "config": "^3.2.2",
-    "informix-wrapper": "git+https://github.com/appirio-tech/informix-wrapper.git",
+    "informix-wrapper": "git+https://github.com/appirio-tech/informix-wrapper.git#prepare_stmt_fix",
     "no-kafka": "^3.4.3",
     "pg": "^7.12.1",
     "sleep": "^6.1.0",

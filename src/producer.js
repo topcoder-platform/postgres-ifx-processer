@@ -20,19 +20,15 @@ async function setupPgClient() {
 var payloadcopy 
 try {
     await pgClient.connect()
-    for (const triggerFunction of pgOptions.triggerFunctions) {
+    //for (const triggerFunction of pgOptions.triggerFunctions) {
+    for (const triggerFunction of pgOptions.triggerFunctions.split(',')) {
       await pgClient.query(`LISTEN ${triggerFunction}`)
     }
     pgClient.on('notification', async (message) => {
       try {
 	payloadcopy = ""
-	 logger.debug('Entering producer 1')     
-	  logger.debug(message.toString())
-	   logger.debug('Entering producer 2')
+	logger.debug('Entering producer 2')
 	logger.debug(message)
-	   logger.debug('Entering producer 3')
-	logger.debug(JSON.stringify(message.payload))   
-	      
         const payload = JSON.parse(message.payload)
 	
 	payloadcopy = message
@@ -42,11 +38,12 @@ try {
             //logger.info('trying to push on kafka topic')
             await pushToKafka(payload)
             logger.info('Push to kafka and added for audit trail')
+	     audit(message)
           } else {
             logger.info('Push to dynamodb for reconciliation')
             await pushToDynamoDb(payload)
           }
-          audit(message)
+
         } else {
           logger.debug('Ignoring message with incorrect topic or originator')
           // push to slack - alertIt("slack message")
@@ -121,7 +118,7 @@ async function audit(message) {
     } else {
       logger.debug(`Producer DynamoDb : ${logMessage}`);
     }
-    auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "", JSON.stringify(message), pl_timestamp, pl_topic], 'producer')
+    await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "", JSON.stringify(message), pl_timestamp, pl_topic], 'producer')
   } else {
     const pl_randonseq = 'err-' + (new Date()).getTime().toString(36) + Math.random().toString(36).slice(2)
     if (!isFailover) {
