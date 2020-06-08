@@ -24,7 +24,7 @@ async function setupPgClient() {
     rec_d_type = config.RECONSILER.RECONSILER_DURATION_TYPE
     var paramvalues = ['push-to-kafka',rec_d_start,rec_d_end];
     sql1 = "select pgifx_sync_audit.seq_id, pgifx_sync_audit.payloadseqid,pgifx_sync_audit.auditdatetime ,pgifx_sync_audit.syncstatus, pgifx_sync_audit.payload from common_oltp.pgifx_sync_audit where pgifx_sync_audit.syncstatus =($1)"
-    sql2 = " and pgifx_sync_audit.tablename != 'sync_test_id' and pgifx_sync_audit.producer_err <> 'Reconsiler1' and pgifx_sync_audit.auditdatetime between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
+    sql2 = " and pgifx_sync_audit.tablename not in ('sync_test_id') and pgifx_sync_audit.producer_err <> 'Reconsiler1' and pgifx_sync_audit.auditdatetime between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
     sql3 = " and  (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($3)"
     sql = sql1 + sql2 + sql3
     await pgClient.query(sql,paramvalues, async (err,result) => {
@@ -45,13 +45,17 @@ async function setupPgClient() {
               }//column for loop
           try {
 		//console.log("reconsiler_payload====",reconsiler_payload);
-		if (reconsiler_payload != ""){
+	     if (reconsiler_payload != ""){
               var s_payload =  reconsiler_payload
               payload = JSON.parse(s_payload)
+	      logger.debug(`payload.payload.table : "${payload1.payload.table}"`);
               payload1 = payload.payload
+	      //exclude sync_test_id table from pushing
+	      if (`"${payload1.payload.table}"` !== "sync_test_id"){
               await pushToKafka(payload1)
               logger.info('Reconsiler1 Push to kafka and added for audit trail')
               await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
+	     }
             } }catch (error) {
               logger.error('Reconsiler1 : Could not parse message payload')
               logger.debug(`error-sync: Reconsiler1 parse message : "${error.message}"`)
