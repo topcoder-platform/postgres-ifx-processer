@@ -1,5 +1,26 @@
 SET search_path TO common_oltp;
 
+CREATE INDEX IF NOT EXISTS email_address_idx ON common_oltp.email
+    (
+    address 
+    );
+    
+CREATE INDEX IF NOT EXISTS user_activ_code_idx ON common_oltp.user
+    (
+    activation_code 
+    );
+
+CREATE INDEX IF NOT EXISTS user_open_id_idx ON common_oltp.user
+    (
+    open_id
+    );
+
+CREATE INDEX IF NOT EXISTS user_status_idx ON common_oltp.user
+    (
+    status
+    );
+
+
 CREATE TABLE sync_test_id
 (
         uniqid INTEGER NOT NULL,
