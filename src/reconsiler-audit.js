@@ -50,7 +50,7 @@ async function setupPgClient() {
                s_payload =  reconsiler_payload
                payload = JSON.parse(s_payload)
                payload1 = payload.payload
-	      logger.debug(`payload.payload.table : "${payload1.payload.table}"`);
+	      //logger.debug(`payload.payload.table : "${payload1.payload.table}"`);
 	      //exclude sync_test_id table from pushing
 	     // if (`"${payload1.payload.table}"` !== "sync_test_id"){
               await pushToKafka(payload1)
