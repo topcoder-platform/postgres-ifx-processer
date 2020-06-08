@@ -70,6 +70,7 @@ async function dataHandler(messageSet, topic, partition) {
           message.payload.operation, "Informix-updated", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')       
       //}
     } catch (err) {
+      logger.debug(`Consumer :inx return status error for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
       const errmsg2 = `error-sync: Could not process kafka message or informix DB error: "${err.message}"`
       logger.error(errmsg2)
       logger.debug(`error-sync: consumer "${err.message}"`)
