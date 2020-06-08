@@ -48,8 +48,9 @@ var retryvar = "";
 async function dataHandler(messageSet, topic, partition) {
   for (const m of messageSet) { // Process messages sequentially
     let message
+    let ifxstatus = 0
     try {
-      let ifxstatus = 0
+  // let ifxstatus = 0
       let cs_payloadseqid;
       message = JSON.parse(m.message.value)
       //logger.debug(`Consumer Received from kafka :${JSON.stringify(message)}`)
@@ -70,7 +71,7 @@ async function dataHandler(messageSet, topic, partition) {
           message.payload.operation, "Informix-updated", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')       
       //}
     } catch (err) {
-      logger.debug(`Consumer :ifx return status error for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
+      logger.debug(`Consumer:ifx return status error for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
       const errmsg2 = `error-sync: Could not process kafka message or informix DB error: "${err.message}"`
       logger.error(errmsg2)
       logger.debug(`error-sync: consumer "${err.message}"`)
