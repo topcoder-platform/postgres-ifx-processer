@@ -1,6 +1,7 @@
 database common_oltp
 
 DROP PROCEDURE proc_user_update(varchar,decimal);
+DROP PROCEDURE proc_user_update;
 CREATE PROCEDURE informix.proc_user_update(
 new_handle varchar(50),
 user_id decimal(10,0))
@@ -9,7 +10,6 @@ UPDATE user SET handle_lower = lower(new_handle), modify_date = current WHERE us
 End if;
 end procedure;   
                 
-DROP PROCEDURE proc_user_update;
 create procedure "informix".proc_user_update(
 user_id DECIMAL(10,0),
 old_first_name VARCHAR(64),
