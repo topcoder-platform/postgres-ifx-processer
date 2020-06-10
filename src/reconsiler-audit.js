@@ -38,6 +38,7 @@ async function setupPgClient() {
         console.log("Reconsiler1 : Rowcount = ", result.rows.length)
         for (var i = 0; i < result.rows.length; i++) {
             for(var columnName in result.rows[i]) {
+            logger.debug(`reconsiler records : ${result.rows[i][columnName]}`)
                 // console.log('column "%s" has a value of "%j"', columnName, result.rows[i][columnName]);
                 //if ((columnName === 'seq_id') || (columnName === 'payload')){
                 if ((columnName === 'payload')){
@@ -47,6 +48,7 @@ async function setupPgClient() {
           try {
 		//console.log("reconsiler_payload====",reconsiler_payload);
 	     if (reconsiler_payload != ""){
+	       logger.debug(`reconsiler payload : ${reconsiler_payload}`)
                s_payload =  reconsiler_payload
                payload = JSON.parse(s_payload)
                payload1 = payload.payload
