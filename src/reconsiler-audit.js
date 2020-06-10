@@ -66,12 +66,10 @@ async function setupPgClient() {
 		    payload1 = payload
 		    console.log(payload1)
 		   }
-		     
-		
-		s_payload = JSON.stringify(s_payload)
-		let payload = JSON.parse(s_payload)
+		//s_payload = JSON.stringify(s_payload)
+		//let payload = JSON.parse(s_payload)
                 //payload1 = payload.payload
-                await pushToKafka(payload) 
+                 await pushToKafka(payload1) 
 		     
               logger.info('Reconsiler1 Push to kafka and added for audit trail')
               await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
