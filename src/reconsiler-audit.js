@@ -49,7 +49,25 @@ async function setupPgClient() {
                payload = JSON.parse(s_payload)
                payload1 = payload.payload
               await pushToKafka(payload1) */
-		let s_payload =  reconsiler_payload
+		     
+		   let s_payload =  reconsiler_payload 
+		   let payload1
+		   let payload 
+		   s_payload = JSON.stringify(s_payload)
+		   if (s_payload.includes("processId"))
+		   {
+		    console.log("here1")
+		    payload = JSON.parse(s_payload)
+		    payload1 = JSON.parse(payload.payload)
+		    console.log(payload1)
+		   } else
+		   {console.log("here2")
+		    payload = JSON.parse(s_payload)
+		    payload1 = payload
+		    console.log(payload1)
+		   }
+		     
+		
 		s_payload = JSON.stringify(s_payload)
 		let payload = JSON.parse(s_payload)
                 //payload1 = payload.payload
