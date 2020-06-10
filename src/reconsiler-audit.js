@@ -39,23 +39,22 @@ async function setupPgClient() {
         for (var i = 0; i < result.rows.length; i++) {
             for(var columnName in result.rows[i]) {
             logger.debug(`reconsiler record details : ${result.rows[i][columnName]}`)
-                // console.log('column "%s" has a value of "%j"', columnName, result.rows[i][columnName]);
-                //if ((columnName === 'seq_id') || (columnName === 'payload')){
                 if ((columnName === 'payload')){
                 var reconsiler_payload = result.rows[i][columnName]
                 }
               }//column for loop
           try {
-		//console.log("reconsiler_payload====",reconsiler_payload);
 	     if (reconsiler_payload != ""){
-	       logger.debug(`reconsiler payload : ${reconsiler_payload}`)
-               s_payload =  reconsiler_payload
+             /*  s_payload =  reconsiler_payload. //original code
                payload = JSON.parse(s_payload)
                payload1 = payload.payload
-	      //logger.debug(`payload.payload.table : "${payload1.payload.table}"`);
-	      //exclude sync_test_id table from pushing
-	     // if (`"${payload1.payload.table}"` !== "sync_test_id"){
-              await pushToKafka(payload1)
+              await pushToKafka(payload1) */
+		let s_payload =  reconsiler_payload
+		s_payload = JSON.stringify(s_payload)
+		let payload = JSON.parse(s_payload)
+                //payload1 = payload.payload
+                await pushToKafka(payload) 
+		     
               logger.info('Reconsiler1 Push to kafka and added for audit trail')
               await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
 	    // }
@@ -172,13 +171,16 @@ function onScan(err, data) {
           //console.log(item.payloadseqid);
           var retval = await verify_pg_record_exists(item.payloadseqid)
           //console.log("retval", retval);
-              if (retval === false){
-                var s_payload =  (item.pl_document)
+	  var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)
+              if (retval === false && `${payload1.table}` !== 'sync_test_id'){
+               /* var s_payload =  (item.pl_document)
+                payload = s_payload
+                payload1 = (payload.payload)*/
                 await pushToKafka(item.pl_document)
                 await audit(s_payload,1) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
-                logger.info(`Reconsiler2 : ${item.payloadseqid} posted to kafka: Total Kafka Count : ${total_pushtokafka}`)
+                logger.info(`Reconsiler2 : ${payload1.table} ${item.payloadseqid} posted to kafka: Total Kafka Count : ${total_pushtokafka}`)
                 total_pushtokafka += 1
             }
           total_dd_records += 1
