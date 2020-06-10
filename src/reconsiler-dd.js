@@ -118,10 +118,10 @@ async function verify_pg_record_exists(seqid)
 const terminate = () => process.exit()
 
 async function run() {
-  logger.debug("Initialising Reconsiler1 setup...")
-   await setupPgClient()
-  //logger.debug("Initialising Reconsiler2 setup...")
-  //callReconsiler2()
+  //logger.debug("Initialising Reconsiler1 setup...")
+   //await setupPgClient()
+  logger.debug("Initialising Reconsiler2 setup...")
+  callReconsiler2()
  // terminate()
 }
 //execute
