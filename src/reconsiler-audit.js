@@ -38,7 +38,7 @@ async function setupPgClient() {
         console.log("Reconsiler1 : Rowcount = ", result.rows.length)
         for (var i = 0; i < result.rows.length; i++) {
             for(var columnName in result.rows[i]) {
-            logger.debug(`reconsiler records : ${result.rows[i][columnName]}`)
+            logger.debug(`reconsiler record details : ${result.rows[i][columnName]}`)
                 // console.log('column "%s" has a value of "%j"', columnName, result.rows[i][columnName]);
                 //if ((columnName === 'seq_id') || (columnName === 'payload')){
                 if ((columnName === 'payload')){
