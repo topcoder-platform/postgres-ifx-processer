@@ -6,10 +6,11 @@ defaults: &defaults
 install_dependency: &install_dependency
           name: Installation of build and deployment dependencies.
           command: |
+            sudo apt-get update
             sudo apt install jq
             sudo pip install awscli --upgrade
             sudo pip install docker-compose
-            sudo apt-get install default-jdk
+            sudo apt-get install default-jdk --fix-missing
 install_deploysuite: &install_deploysuite
           name: Installation of install_deploysuite.
           #Git Clone -change back to v1.3 or latest once counter var is generalized.
@@ -39,31 +40,51 @@ build_steps: &build_steps
       - deploy:
           name: Running MasterScript.
           command: |
+            
             ./awsconfiguration.sh ${DEPLOY_ENV}
             source awsenvconf
+            #scorecard test consumer remove later
+            #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-consumer_scorecard-deployvar
+            #source buildenvvar
+            #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
+            
+            #scorecard test producer remove later
+            #echo "Running Masterscript - deploy postgres-ifx-processer producer"
+            #if [ -e ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json; fi
+            #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-producer_scorecard-deployvar
+            #source buildenvvar
+            #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
 
             # ./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar
             #source buildenvvar
             #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
             
+
             echo "Running Masterscript - deploy postgres-ifx-processer producer"
-            #if [ -e ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json; fi
+            if [ -e ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json; fi
             ./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar
             source buildenvvar
             ./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
                           
-            #echo "Running Masterscript - deploy postgres-ifx-processer producer_dd"
-            #if [ -e ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar.json; fi
-            #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-producer_dd-deployvar
-            #source buildenvvar
-            #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
+            echo "Running Masterscript - deploy postgres-ifx-processer producer_dd"
+            if [ -e ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar.json; fi
+            ./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-producer_dd-deployvar
+            source buildenvvar
+            ./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
+
 
             #echo "Running Masterscript - deploy postgres-ifx-processer reconsiler1"
             #if [ -e ${LOGICAL_ENV}-${APP_NAME}-reconsiler1-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-reconsiler1-deployvar.json; fi
             #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-reconsiler1-deployvar
             #source buildenvvar
             #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
-            
+
+            #echo "Running Masterscript - deploy postgres-ifx-processer reconsiler2"
+            #if [ -e ${LOGICAL_ENV}-${APP_NAME}-reconsiler2-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-reconsiler1-deployvar.json; fi
+            #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-reconsiler2-deployvar
+            #source buildenvvar
+            #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
+
 jobs:
   # Build & Deploy against development backend #
   "build-dev":
@@ -103,13 +124,12 @@ workflows:
             branches:
               only:
                 - dev
-                - dev-retryfeature
       - "build-test":
           context : org-global
           filters:
             branches:
-              only:
-                - dev-test-pg             
+              only:  
+                - dev-test-pg
                 - dev-test-pg-rf             
       - "build-prod":
           context : org-global

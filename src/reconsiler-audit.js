@@ -24,9 +24,10 @@ async function setupPgClient() {
     rec_d_type = config.RECONSILER.RECONSILER_DURATION_TYPE
     var paramvalues = ['push-to-kafka',rec_d_start,rec_d_end];
     sql1 = "select pgifx_sync_audit.seq_id, pgifx_sync_audit.payloadseqid,pgifx_sync_audit.auditdatetime ,pgifx_sync_audit.syncstatus, pgifx_sync_audit.payload from common_oltp.pgifx_sync_audit where pgifx_sync_audit.syncstatus =($1)"
-    sql2 = " and pgifx_sync_audit.producer_err <> 'Reconsiler1' and pgifx_sync_audit.auditdatetime between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
+    sql2 = " and pgifx_sync_audit.tablename not in ('sync_test_id') and pgifx_sync_audit.producer_err <> 'Reconsiler1' and pgifx_sync_audit.auditdatetime between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
     sql3 = " and  (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($3)"
     sql = sql1 + sql2 + sql3
+    logger.info(`${sql}`)
     await pgClient.query(sql,paramvalues, async (err,result) => {
       if (err) {
         var errmsg0 = `error-sync: Audit Reconsiler1 query  "${err.message}"`
@@ -37,21 +38,43 @@ async function setupPgClient() {
         console.log("Reconsiler1 : Rowcount = ", result.rows.length)
         for (var i = 0; i < result.rows.length; i++) {
             for(var columnName in result.rows[i]) {
-                // console.log('column "%s" has a value of "%j"', columnName, result.rows[i][columnName]);
-                //if ((columnName === 'seq_id') || (columnName === 'payload')){
+            logger.debug(`reconsiler record details : ${result.rows[i][columnName]}`)
                 if ((columnName === 'payload')){
                 var reconsiler_payload = result.rows[i][columnName]
                 }
               }//column for loop
           try {
-		//console.log("reconsiler_payload====",reconsiler_payload);
-		if (reconsiler_payload != ""){
-              var s_payload =  reconsiler_payload
-              payload = JSON.parse(s_payload)
-              payload1 = payload.payload
-              await pushToKafka(payload1)
+	     if (reconsiler_payload != ""){
+             /*  s_payload =  reconsiler_payload. //original code
+               payload = JSON.parse(s_payload)
+               payload1 = payload.payload
+              await pushToKafka(payload1) */
+		     
+		   let s_payload =  reconsiler_payload 
+		   let s_payload1 = JSON.stringify(s_payload)
+		   let payload1
+		   let payload 
+		   if (s_payload1.includes("processId"))
+		   {
+		    console.log("here1")
+		    payload = JSON.parse(s_payload)
+		    //payload1 = JSON.parse(payload.payload)
+		     payload1 = payload.payload
+		    console.log(payload1)
+		   } else
+		   {console.log("here2")
+		    payload = JSON.parse(s_payload1)
+		    payload1 = payload
+		    console.log(payload1)
+		   }
+		//s_payload = JSON.stringify(s_payload)
+		//let payload = JSON.parse(s_payload)
+                //payload1 = payload.payload
+                 await pushToKafka(payload1) 
+		     
               logger.info('Reconsiler1 Push to kafka and added for audit trail')
               await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
+	    // }
             } }catch (error) {
               logger.error('Reconsiler1 : Could not parse message payload')
               logger.debug(`error-sync: Reconsiler1 parse message : "${error.message}"`)
@@ -165,13 +188,16 @@ function onScan(err, data) {
           //console.log(item.payloadseqid);
           var retval = await verify_pg_record_exists(item.payloadseqid)
           //console.log("retval", retval);
-              if (retval === false){
-                var s_payload =  (item.pl_document)
+	  var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)
+              if (retval === false && `${payload1.table}` !== 'sync_test_id'){
+               /* var s_payload =  (item.pl_document)
+                payload = s_payload
+                payload1 = (payload.payload)*/
                 await pushToKafka(item.pl_document)
                 await audit(s_payload,1) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
-                logger.info(`Reconsiler2 : ${item.payloadseqid} posted to kafka: Total Kafka Count : ${total_pushtokafka}`)
+                logger.info(`Reconsiler2 : ${payload1.table} ${item.payloadseqid} posted to kafka: Total Kafka Count : ${total_pushtokafka}`)
                 total_pushtokafka += 1
             }
           total_dd_records += 1

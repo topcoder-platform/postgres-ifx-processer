@@ -2,42 +2,56 @@
 const informix = require('../common/informixWrapper')
 const logger = require('../common/logger')
 
-/**
- * Updates informix database with insert/update/delete operation
- * @param {Object} payload The DML trigger data
- */
-async function updateInformix (payload) {
-  logger.debug('=====Starting to update informix with data:====')
-  //const operation = payload.operation.toLowerCase()
-  const operation = payload.payload.operation.toLowerCase()
-  console.log("level 1 informix ",operation)
-	let sql = null
+String.prototype.escapeSpecialChars = function () {
+  return this.replace(/\n/g, "\\n");
+};
 
-        const columns = payload.payload.data
-        const primaryKey = payload.payload.Uniquecolumn
+async function updateInformix(payload) {
+  logger.debug(`Informix Received from consumer-kafka :${JSON.stringify(payload)}`)
+  const operation = payload.payload.operation.toLowerCase()
+  console.log("=====Informix DML Operation :==========", operation)
+  let sql = null
+  let t0 = []
+  const columns = payload.payload.data
+  const primaryKey = payload.payload.Uniquecolumn
   // Build SQL query
   switch (operation) {
     case 'insert':
       {
         const columnNames = Object.keys(columns)
-        sql = `insert into ${payload.payload.schema}:${payload.payload.table} (${columnNames.join(', ')}) values (${columnNames.map((k) => `'${columns[k]}'`).join(', ')});` // "insert into <schema>:<table> (col_1, col_2, ...) values (val_1, val_2, ...)"
+        sql = `insert into ${payload.payload.schema}:${payload.payload.table} (${columnNames.join(', ')}) values (${columnNames.map((k) => `?`).join(', ')});`
+        t0 = Object.keys(columns).map((key) => `{"value":"${columns[key]}"}`)
       }
       break
     case 'update':
       {
-	  sql = `update ${payload.payload.schema}:${payload.payload.table} set ${Object.keys(columns).map((key) => `${key}='${columns[key]}'`).join(', ')} where ${primaryKey}=${columns[primaryKey]};` // "update <schema>:<table> set col_1=val_1, col_2=val_2, ... where primary_key_col=primary_key_val"
+        sql = `update ${payload.payload.schema}:${payload.payload.table} set ${Object.keys(columns).map((key) => `${key}= ?`).join(', ')} where ${primaryKey}= ?;`
+        t0 = Object.keys(columns).map((key) => `{"value":"${columns[key]}"}`)
+        t0.push(`{"value":"${columns[primaryKey]}"}`) //param value for appended for where clause
       }
       break
     case 'delete':
       {
-        sql = `delete from ${payload.payload.schema}:${payload.payload.table} where ${primaryKey}=${columns[primaryKey]};` // ""delete from <schema>:<table> where primary_key_col=primary_key_val"
+        sql = `delete from ${payload.payload.schema}:${payload.payload.table} where ${primaryKey}= ?;`
+        t0.push(`{"value":"${columns[primaryKey]}"}`)
       }
       break
     default:
       throw new Error(`Operation ${operation} is not supported`)
   }
 
-  const result = await informix.executeQuery(payload.payload.schema, sql, null)
+  //Preparedstatement for informix
+  t0.forEach((name, index) => t0[index] = `${name.escapeSpecialChars()}`);
+  //logger.debug(`Param values : ${t0}`);
+  let temp1 = "[" + `${t0}` + "]"
+  let finalparam = JSON.parse(temp1)
+
+  /*console.log(`Typeof finalparam : ${typeof(finalparam)}`)
+  if (finalparam.constructor === Array ) console.log('isarray')
+  else console.log('finalparam not an array')*/
+  logger.debug(`Final sql and param values are -- ${sql} ${JSON.stringify(finalparam)}`);
+  const result = await informix.executeQuery(payload.payload.schema, sql, finalparam)
+  logger.debug(`ifx execute query result : ${result}`)
   return result
 }
 
