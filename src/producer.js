@@ -29,8 +29,7 @@ try {
 	payloadcopy = ""
 	logger.debug('Entering producer 2')
 	logger.debug(message)
-        const payload = JSON.parse(message.payload)
-	
+  const payload = JSON.parse(message.payload)
 	payloadcopy = message
         const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
         if (validTopicAndOriginator) {
