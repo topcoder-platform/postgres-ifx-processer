@@ -73,7 +73,8 @@ async function setupPgClient() {
                  await pushToKafka(payload1) 
 		     
               logger.info('Reconsiler1 Push to kafka and added for audit trail')
-              await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
+             // await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
+	      await audit(payload1,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
 	    // }
             } }catch (error) {
               logger.error('Reconsiler1 : Could not parse message payload')
@@ -129,7 +130,8 @@ async function audit(message,reconsileflag) {
     	var pl_producererr= "Reconsiler2"
     }else {
     	const jsonpayload = JSON.parse(message)
-    	 payload = JSON.parse(jsonpayload.payload)
+    	// payload = JSON.parse(jsonpayload.payload) //original
+	  payload = jsonpayload
     	var  pl_producererr= "Reconsiler1"
     }
 	  const pl_processid = 5555
