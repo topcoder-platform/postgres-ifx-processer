@@ -48,11 +48,11 @@ pgpool.on('error', (err, client) => {
     process.exit(-1)
   })
 
-await pgpool.connect(async (err, client, release) => {
+ pgpool.connect((err, client, release) => {
     if (err) {
       return logger.debug(`Error acquiring client : ${err.stack}`)
     }
-    await  client.query(sql, data, (err, res) => {
+      client.query(sql, data, (err, res) => {
       release()
       if (err) {
         return logger.debug(`Error executing Query : ${err.stack}`)
