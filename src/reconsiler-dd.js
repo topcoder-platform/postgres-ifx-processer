@@ -114,6 +114,36 @@ async function verify_pg_record_exists(seqid)
   }
 }
 
+async function audit(message,reconsileflag) {
+   var pl_producererr
+   if (reconsileflag === 1)
+   {
+    	const jsonpayload = (message)
+    	const payload = (jsonpayload.payload)
+    	pl_producererr= "Reconsiler2"
+    }else {
+    	const jsonpayload = JSON.parse(message)
+    	// payload = JSON.parse(jsonpayload.payload) //original
+	  payload = jsonpayload
+    	pl_producererr= "Reconsiler1"
+    }
+	  const pl_processid = 5555
+    //const jsonpayload = JSON.parse(message)
+    //payload = JSON.parse(jsonpayload.payload)
+    payload1 = (payload.payload)
+    const pl_seqid = payload1.payloadseqid
+    const pl_topic = payload1.topic // TODO can move in config ?
+    const pl_table = payload1.table
+    const pl_uniquecolumn = payload1.Uniquecolumn
+    const pl_operation = payload1.operation
+    const pl_timestamp = payload1.timestamp
+    const pl_payload = JSON.stringify(message)
+	const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`
+    logger.debug(`${pl_producererr} : ${logMessage}`);
+   await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", pl_producererr, pl_payload, new Date(), ""], 'producer')
+	return
+}
+
 //=================BEGIN HERE =======================
 const terminate = () => process.exit()
 
