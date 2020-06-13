@@ -123,16 +123,17 @@ return
 }
 
 async function audit(message,reconsileflag) {
+   var pl_producererr
    if (reconsileflag === 1)
    {
     	const jsonpayload = (message)
     	const payload = (jsonpayload.payload)
-    	var pl_producererr= "Reconsiler2"
+    	pl_producererr= "Reconsiler2"
     }else {
     	const jsonpayload = JSON.parse(message)
     	// payload = JSON.parse(jsonpayload.payload) //original
 	  payload = jsonpayload
-    	var  pl_producererr= "Reconsiler1"
+    	pl_producererr= "Reconsiler1"
     }
 	  const pl_processid = 5555
     //const jsonpayload = JSON.parse(message)
