@@ -57,6 +57,7 @@ await pgpool.connect(async (err, client, release) => {
       if (err) {
         return logger.debug(`Error executing Query : ${err.stack}`)
       }
+      logger.debug(`Audit Trail Params : ${data}`)
       logger.debug(`Audit Trail update : ${res.rowCount}`)
     })
   })
