@@ -7,7 +7,9 @@ const logger = require('./common/logger')
 const pushToKafka = require('./services/pushToKafka')
 const postMessage = require('./services/posttoslack')
 const auditTrail = require('./services/auditTrail');
+const pgOptions = config.get('POSTGRES')
 const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
+
 
 const port = 3000
 //===============RECONSILER2 DYNAMODB CODE STARTS HERE ==========================
