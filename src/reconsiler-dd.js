@@ -7,6 +7,8 @@ const logger = require('./common/logger')
 const pushToKafka = require('./services/pushToKafka')
 const postMessage = require('./services/posttoslack')
 const auditTrail = require('./services/auditTrail');
+const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
+
 const port = 3000
 //===============RECONSILER2 DYNAMODB CODE STARTS HERE ==========================
 
@@ -142,6 +144,28 @@ async function audit(message,reconsileflag) {
     logger.debug(`${pl_producererr} : ${logMessage}`);
    await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", pl_producererr, pl_payload, new Date(), ""], 'producer')
 	return
+}
+
+async function callposttoslack(slackmessage) {
+  if (config.SLACK.SLACKNOTIFY === 'true') {
+    return new Promise(function (resolve, reject) {
+      postMessage(slackmessage, (response) => {
+        console.log(`respnse : ${response}`)
+        if (response.statusCode < 400) {
+          logger.debug('Message posted successfully');
+          //callback(null);
+        } else if (response.statusCode < 500) {
+          const errmsg1 = `Slack Error: Reconsiler1: posting message to Slack API: ${response.statusCode} - ${response.statusMessage}`
+          logger.debug(`error-sync: ${errmsg1}`)
+        } else {
+          logger.debug(`Reconsiler1: Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
+          //callback(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
+        }
+        resolve("done")
+      });
+    }) //end
+  }
+return
 }
 
 //=================BEGIN HERE =======================
