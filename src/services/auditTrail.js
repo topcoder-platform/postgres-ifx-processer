@@ -57,15 +57,10 @@ pgpool.on('error', (err, client) => {
       if (err) {
         return logger.debug(`Error executing Query : ${err.stack}`)
       }
-      logger.debug(`Audit Trail Sql : ${sql}`)
-      logger.debug(`Audit Trail Params : ${data}`)
       logger.debug(`Audit Trail update : ${res.rowCount}`)
     })
   })
-
-
 }
-
 
 module.exports = auditTrail
 
