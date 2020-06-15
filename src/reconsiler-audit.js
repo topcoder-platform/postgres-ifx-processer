@@ -24,7 +24,7 @@ async function setupPgClient() {
     rec_d_type = config.RECONSILER.RECONSILER_DURATION_TYPE
     var paramvalues = ['push-to-kafka',rec_d_start,rec_d_end];
     sql1 = "select pgifx_sync_audit.seq_id, pgifx_sync_audit.payloadseqid,pgifx_sync_audit.auditdatetime ,pgifx_sync_audit.syncstatus, pgifx_sync_audit.payload from common_oltp.pgifx_sync_audit where pgifx_sync_audit.syncstatus =($1)"
-    sql2 = " and pgifx_sync_audit.tablename not in ('sync_test_id') and pgifx_sync_audit.producer_err <> 'Reconsiler1' and pgifx_sync_audit.auditdatetime between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
+    sql2 = " and pgifx_sync_audit.tablename not in ('sync_test_id') and pgifx_sync_audit.syncstatus not in ('Informix-updated') and pgifx_sync_audit.producer_err <> 'Reconsiler1' and pgifx_sync_audit.auditdatetime between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
     sql3 = " and  (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($3)"
     sql = sql1 + sql2 + sql3
     logger.info(`${sql}`)
@@ -73,7 +73,8 @@ async function setupPgClient() {
                  await pushToKafka(payload1) 
 		     
               logger.info('Reconsiler1 Push to kafka and added for audit trail')
-              await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
+             // await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
+	      await audit(payload1,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
 	    // }
             } }catch (error) {
               logger.error('Reconsiler1 : Could not parse message payload')
@@ -122,15 +123,17 @@ return
 }
 
 async function audit(message,reconsileflag) {
+   var pl_producererr
    if (reconsileflag === 1)
    {
     	const jsonpayload = (message)
     	const payload = (jsonpayload.payload)
-    	var pl_producererr= "Reconsiler2"
+    	pl_producererr= "Reconsiler2"
     }else {
     	const jsonpayload = JSON.parse(message)
-    	 payload = JSON.parse(jsonpayload.payload)
-    	var  pl_producererr= "Reconsiler1"
+    	// payload = JSON.parse(jsonpayload.payload) //original
+	  payload = jsonpayload
+    	pl_producererr= "Reconsiler1"
     }
 	  const pl_processid = 5555
     //const jsonpayload = JSON.parse(message)
@@ -145,7 +148,7 @@ async function audit(message,reconsileflag) {
     const pl_payload = JSON.stringify(message)
 	const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`
     logger.debug(`${pl_producererr} : ${logMessage}`);
-   await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", pl_producererr, pl_payload, new Date(), ""], 'producer')
+   await auditTrail([pl_seqid, 4444, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "Reconsiler1", pl_payload, new Date(), ""], 'producer')
 	return
 }
 

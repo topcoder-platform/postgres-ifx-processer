@@ -7,6 +7,10 @@ const logger = require('./common/logger')
 const pushToKafka = require('./services/pushToKafka')
 const postMessage = require('./services/posttoslack')
 const auditTrail = require('./services/auditTrail');
+const pgOptions = config.get('POSTGRES')
+const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
+
+
 const port = 3000
 //===============RECONSILER2 DYNAMODB CODE STARTS HERE ==========================
 
@@ -50,14 +54,18 @@ function onScan(err, data) {
 	  var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)
-              if (retval === false && `${payload1.table}` !== 'sync_test_id'){
+		logger.info(`Checking for  : ${item.payloadseqid} ${payload1.table}` )   
+                logger.info(`retval : ${retval}` ) 
+              if (retval === false && `"${payload1.table}"` !== "sync_test_id"){
+		//logger.info(`retval : ${retval} and  ${payload1.table}` )   
                /* var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)*/
                 await pushToKafka(item.pl_document)
                 await audit(s_payload,1) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
-                logger.info(`Reconsiler2 : ${payload1.table} ${item.payloadseqid} posted to kafka: Total Kafka Count : ${total_pushtokafka}`)
-                total_pushtokafka += 1
+                logger.info(`Reconsiler2 Posted Payload : ${JSON.stringify(item.pl_document)}`)
+		logger.info(`Total push-to-kafka Count : ${total_pushtokafka}`)
+	      total_pushtokafka += 1
             }
           total_dd_records += 1
        });
@@ -82,17 +90,19 @@ function onScan(err, data) {
 async function verify_pg_record_exists(seqid)
 {
     try {
-	const pgClient = new pg.Client(pgConnectionString)
+	let pgClient = new pg.Client(pgConnectionString)
         if (!pgClient.connect()) {await pgClient.connect()}
         var paramvalues = [seqid]
-        sql = 'select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1)'
+        sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1)"
+	 logger.info(`sql and params : ${sql} ${paramvalues}`)
               return new Promise(function (resolve, reject) {
-            	pgClient.query(sql, paramvalues, async (err, result) => {
+            	 pgClient.query(sql, paramvalues,  (err, result) => {
                 if (err) {
                     var errmsg0 = `error-sync: Audit reconsiler2 query  "${err.message}"`
                     console.log(errmsg0)
                 }
                 else {
+		   logger.info(`Query result for ${paramvalues} : ${result.rowCount}`)
                     if (result.rows.length > 0) {
                         //console.log("row length > 0 ")
                         resolve(true);
@@ -103,6 +113,7 @@ async function verify_pg_record_exists(seqid)
                     }
                 }
 	    pgClient.end()
+	    pgClient = null
         })
         })}
     catch (err) {
@@ -112,6 +123,58 @@ async function verify_pg_record_exists(seqid)
     await callposttoslack(errmsg)
     terminate()
   }
+}
+
+async function audit(message,reconsileflag) {
+   var pl_producererr
+   if (reconsileflag === 1)
+   {
+    	const jsonpayload = (message)
+    	const payload = (jsonpayload.payload)
+    	pl_producererr= "Reconsiler2"
+    }else {
+    	const jsonpayload = JSON.parse(message)
+    	// payload = JSON.parse(jsonpayload.payload) //original
+	  payload = jsonpayload
+    	pl_producererr= "Reconsiler1"
+    }
+	  const pl_processid = 5555
+    //const jsonpayload = JSON.parse(message)
+    //payload = JSON.parse(jsonpayload.payload)
+    payload1 = (payload.payload)
+    const pl_seqid = payload1.payloadseqid
+    const pl_topic = payload1.topic // TODO can move in config ?
+    const pl_table = payload1.table
+    const pl_uniquecolumn = payload1.Uniquecolumn
+    const pl_operation = payload1.operation
+    const pl_timestamp = payload1.timestamp
+    const pl_payload = JSON.stringify(message)
+	const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`
+    logger.debug(`${pl_producererr} : ${logMessage}`);
+   await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "Reconsiler2", pl_payload, new Date(), ""], 'producer')
+	return
+}
+
+async function callposttoslack(slackmessage) {
+  if (config.SLACK.SLACKNOTIFY === 'true') {
+    return new Promise(function (resolve, reject) {
+      postMessage(slackmessage, (response) => {
+        console.log(`respnse : ${response}`)
+        if (response.statusCode < 400) {
+          logger.debug('Message posted successfully');
+          //callback(null);
+        } else if (response.statusCode < 500) {
+          const errmsg1 = `Slack Error: Reconsiler1: posting message to Slack API: ${response.statusCode} - ${response.statusMessage}`
+          logger.debug(`error-sync: ${errmsg1}`)
+        } else {
+          logger.debug(`Reconsiler1: Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
+          //callback(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
+        }
+        resolve("done")
+      });
+    }) //end
+  }
+return
 }
 
 //=================BEGIN HERE =======================
