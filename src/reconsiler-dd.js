@@ -89,7 +89,7 @@ async function verify_pg_record_exists(seqid)
 	const pgClient = new pg.Client(pgConnectionString)
         if (!pgClient.connect()) {await pgClient.connect()}
         var paramvalues = [seqid]
-        sql = 'select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1)'
+        sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1) and pgifx_sync_audit.syncstatus not in ('Informix-updated') and pgifx_sync_audit.tablename not in ('sync_test_id')"
               return new Promise(function (resolve, reject) {
             	pgClient.query(sql, paramvalues, async (err, result) => {
                 if (err) {
@@ -107,6 +107,7 @@ async function verify_pg_record_exists(seqid)
                     }
                 }
 	    pgClient.end()
+	    
         })
         })}
     catch (err) {
