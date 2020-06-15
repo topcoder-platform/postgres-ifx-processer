@@ -43,10 +43,10 @@ if (sourcetype === 'producer'){
 })
 pgClient2.end() */
 	
-pgpool.on('error', (err, client) => {
+/*pgpool.on('error', (err, client) => {
     logger.debug(`Unexpected error on idle client : ${err}`)
     process.exit(-1)
-  })
+  })*/
 
  pgpool.connect((err, client, release) => {
     if (err) {
