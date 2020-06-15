@@ -55,6 +55,7 @@ function onScan(err, data) {
                 payload = s_payload
                 payload1 = (payload.payload)
               if (retval === false && `"${payload1.table}"` !== "sync_test_id"){
+		logger.info(`retval : ${retval} and  ${payload1.table}` )   
                /* var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)*/
@@ -91,7 +92,7 @@ async function verify_pg_record_exists(seqid)
         var paramvalues = [seqid,'Informix-updated','sync_test_id']
         sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1) and pgifx_sync_audit.syncstatus not in ($2) and pgifx_sync_audit.tablename not in ($3)"
               return new Promise(function (resolve, reject) {
-            	await pgClient.query(sql, paramvalues, async (err, result) => {
+            	 pgClient.query(sql, paramvalues, async (err, result) => {
                 if (err) {
                     var errmsg0 = `error-sync: Audit reconsiler2 query  "${err.message}"`
                     console.log(errmsg0)
@@ -107,7 +108,7 @@ async function verify_pg_record_exists(seqid)
                     }
                 }
 	    pgClient.end()
-	    
+	    pgClient = null
         })
         })}
     catch (err) {
