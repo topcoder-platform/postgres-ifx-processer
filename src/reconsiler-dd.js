@@ -54,15 +54,18 @@ function onScan(err, data) {
 	  var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)
-              if (retval === false){
-		logger.info(`retval : ${retval} and  ${payload1.table}` )   
+		logger.info(`Checking for  : ${item.payloadseqid} ${payload1.table}` )   
+                logger.info(`retval : ${retval}` ) 
+              if (retval === false && `"${payload1.table}"` !== "sync_test_id"){
+		//logger.info(`retval : ${retval} and  ${payload1.table}` )   
                /* var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)*/
                 await pushToKafka(item.pl_document)
                 await audit(s_payload,1) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
-                logger.info(`Reconsiler2: ${payload1.table} ${item.payloadseqid} posted to kafka: Total Kafka Count : ${total_pushtokafka}`)
-                total_pushtokafka += 1
+                logger.info(`Reconsiler2 Posted Payload : ${JSON.stringify(item.pl_document)}`)
+		logger.info(`Total push-to-kafka Count : ${total_pushtokafka}`)
+	      total_pushtokafka += 1
             }
           total_dd_records += 1
        });
@@ -89,8 +92,8 @@ async function verify_pg_record_exists(seqid)
     try {
 	let pgClient = new pg.Client(pgConnectionString)
         if (!pgClient.connect()) {await pgClient.connect()}
-        var paramvalues = [seqid,'Informix-updated','sync_test_id']
-        sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1) and pgifx_sync_audit.syncstatus not in ($2) and pgifx_sync_audit.tablename not in ($3)"
+        var paramvalues = [seqid]
+        sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1)"
 	 logger.info(`sql and params : ${sql} ${paramvalues}`)
               return new Promise(function (resolve, reject) {
             	 pgClient.query(sql, paramvalues,  (err, result) => {
@@ -99,7 +102,7 @@ async function verify_pg_record_exists(seqid)
                     console.log(errmsg0)
                 }
                 else {
-		   logger.info(`result : ${result}`)
+		   logger.info(`Query result for ${paramvalues} : ${result.rowCount}`)
                     if (result.rows.length > 0) {
                         //console.log("row length > 0 ")
                         resolve(true);
@@ -148,7 +151,7 @@ async function audit(message,reconsileflag) {
     const pl_payload = JSON.stringify(message)
 	const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`
     logger.debug(`${pl_producererr} : ${logMessage}`);
-   await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", pl_producererr, pl_payload, new Date(), ""], 'producer')
+   await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "Reconsiler2", pl_payload, new Date(), ""], 'producer')
 	return
 }
 
