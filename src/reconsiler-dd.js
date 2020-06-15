@@ -54,13 +54,13 @@ function onScan(err, data) {
 	  var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)
-              if (retval === false && `${payload1.table}` !== 'sync_test_id'){
+              if (retval === false && `"${payload1.table}"` !== "sync_test_id"){
                /* var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)*/
                 await pushToKafka(item.pl_document)
                 await audit(s_payload,1) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
-                logger.info(`Reconsiler2 : ${payload1.table} ${item.payloadseqid} posted to kafka: Total Kafka Count : ${total_pushtokafka}`)
+                logger.info(`Reconsiler2: ${payload1.table} ${item.payloadseqid} posted to kafka: Total Kafka Count : ${total_pushtokafka}`)
                 total_pushtokafka += 1
             }
           total_dd_records += 1
@@ -91,7 +91,7 @@ async function verify_pg_record_exists(seqid)
         var paramvalues = [seqid,'Informix-updated','sync_test_id']
         sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1) and pgifx_sync_audit.syncstatus not in ($2) and pgifx_sync_audit.tablename not in ($3)"
               return new Promise(function (resolve, reject) {
-            	pgClient.query(sql, paramvalues, async (err, result) => {
+            	await pgClient.query(sql, paramvalues, async (err, result) => {
                 if (err) {
                     var errmsg0 = `error-sync: Audit reconsiler2 query  "${err.message}"`
                     console.log(errmsg0)
