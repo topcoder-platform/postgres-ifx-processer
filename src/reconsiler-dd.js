@@ -54,7 +54,7 @@ function onScan(err, data) {
 	  var s_payload =  (item.pl_document)
                 payload = s_payload
                 payload1 = (payload.payload)
-              if (retval === false && `"${payload1.table}"` !== "sync_test_id"){
+              if (retval === false){
 		logger.info(`retval : ${retval} and  ${payload1.table}` )   
                /* var s_payload =  (item.pl_document)
                 payload = s_payload
@@ -84,20 +84,22 @@ function onScan(err, data) {
     //terminate()
 }
 
-async function verify_pg_record_exists(seqid)
+ function verify_pg_record_exists(seqid)
 {
     try {
-	const pgClient = new pg.Client(pgConnectionString)
+	let pgClient = new pg.Client(pgConnectionString)
         if (!pgClient.connect()) {await pgClient.connect()}
         var paramvalues = [seqid,'Informix-updated','sync_test_id']
         sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1) and pgifx_sync_audit.syncstatus not in ($2) and pgifx_sync_audit.tablename not in ($3)"
+	 logger.info(`sql and params : ${sql} ${paramvalues}`)
               return new Promise(function (resolve, reject) {
-            	 pgClient.query(sql, paramvalues, async (err, result) => {
+            	 pgClient.query(sql, paramvalues,  (err, result) => {
                 if (err) {
                     var errmsg0 = `error-sync: Audit reconsiler2 query  "${err.message}"`
                     console.log(errmsg0)
                 }
                 else {
+		   logger.info(`result : ${result}`)
                     if (result.rows.length > 0) {
                         //console.log("row length > 0 ")
                         resolve(true);
