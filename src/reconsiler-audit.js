@@ -148,7 +148,7 @@ async function audit(message,reconsileflag) {
     const pl_payload = JSON.stringify(message)
 	const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`
     logger.debug(`${pl_producererr} : ${logMessage}`);
-   await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", pl_producererr, pl_payload, new Date(), ""], 'producer')
+   await auditTrail([pl_seqid, 4444, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "Reconsiler1", pl_payload, new Date(), ""], 'producer')
 	return
 }
 
