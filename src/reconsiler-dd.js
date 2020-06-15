@@ -84,7 +84,7 @@ function onScan(err, data) {
     //terminate()
 }
 
- function verify_pg_record_exists(seqid)
+async function verify_pg_record_exists(seqid)
 {
     try {
 	let pgClient = new pg.Client(pgConnectionString)
