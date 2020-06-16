@@ -42,11 +42,25 @@ if (sourcetype === 'producer'){
   }
 })
 pgClient2.end() */
+
+/*require('events').EventEmitter.prototype._maxListeners = 70;
+require('events').defaultMaxListeners = 70;*/
+
+ /* process.on('warning', function (err) {
+    if ( 'MaxListenersExceededWarning' == err.name ) {
+      console.log('o kurwa');
+      // write to log function
+      process.exit(1); // its up to you what then in my case script was hang
+    }
+  });*/
 	
-/*pgpool.on('error', (err, client) => {
+	
+pgpool.on('error', (err, client) => {
     logger.debug(`Unexpected error on idle client : ${err}`)
     process.exit(-1)
-  })*/
+  })
+	
+
 
  pgpool.connect((err, client, release) => {
     if (err) {
