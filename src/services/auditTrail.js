@@ -24,8 +24,8 @@ async function auditTrail (data,sourcetype) {
 	await setupPgClient2()
 }*/
 if (sourcetype === 'producer'){
-        sql0 = 'INSERT INTO common_oltp.pgifx_sync_audit(payloadseqid,processId,tablename,uniquecolumn,dboperation,syncstatus,retrycount,consumer_err,producer_err,payload,auditdatetime,topicname) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)'
-        sql1= ' on conflict (payloadseqid) DO UPDATE SET (syncstatus,producer_err) = ($6,$9) where pgifx_sync_audit.payloadseqid = $1';
+        sql0 = "INSERT INTO common_oltp.pgifx_sync_audit(payloadseqid,processId,tablename,uniquecolumn,dboperation,syncstatus,retrycount,consumer_err,producer_err,payload,auditdatetime,topicname) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) "
+        sql1=  " on conflict (payloadseqid) DO UPDATE SET (syncstatus,producer_err) = ($6,$9) where pgifx_sync_audit.payloadseqid = $1 and pgifx_sync_audit.syncstatus not in ('Informix-updated')";
         sql = sql0 + sql1
 	logger.debug(`--Audit Trail update producer--`)
 } else {
@@ -42,17 +42,31 @@ if (sourcetype === 'producer'){
   }
 })
 pgClient2.end() */
+
+/*require('events').EventEmitter.prototype._maxListeners = 70;
+require('events').defaultMaxListeners = 70;*/
+
+ /* process.on('warning', function (err) {
+    if ( 'MaxListenersExceededWarning' == err.name ) {
+      console.log('o kurwa');
+      // write to log function
+      process.exit(1); // its up to you what then in my case script was hang
+    }
+  });*/
+	
 	
 pgpool.on('error', (err, client) => {
     logger.debug(`Unexpected error on idle client : ${err}`)
     process.exit(-1)
   })
+	
 
-await pgpool.connect(async (err, client, release) => {
+
+ pgpool.connect((err, client, release) => {
     if (err) {
       return logger.debug(`Error acquiring client : ${err.stack}`)
     }
-    await  client.query(sql, data, (err, res) => {
+      client.query(sql, data, (err, res) => {
       release()
       if (err) {
         return logger.debug(`Error executing Query : ${err.stack}`)
@@ -60,10 +74,7 @@ await pgpool.connect(async (err, client, release) => {
       logger.debug(`Audit Trail update : ${res.rowCount}`)
     })
   })
-
-
 }
-
 
 module.exports = auditTrail
 

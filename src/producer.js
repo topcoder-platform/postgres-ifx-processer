@@ -4,7 +4,7 @@
 const config = require('config')
 const pg = require('pg')
 const logger = require('./common/logger')
-const pushToKafka = require('./services/pushToKafka')
+const kafkaService = require('./services/pushToDirectKafka')
 const pushToDynamoDb = require('./services/pushToDynamoDb')
 const pgOptions = config.get('POSTGRES')
 const postMessage = require('./services/posttoslack')
@@ -17,8 +17,8 @@ const port = 3000
 const isFailover = process.argv[2] != undefined ? (process.argv[2] === 'failover' ? true : false) : false
 
 async function setupPgClient() {
-var payloadcopy 
-try {
+  var payloadcopy
+  try {
     await pgClient.connect()
     //for (const triggerFunction of pgOptions.triggerFunctions) {
     for (const triggerFunction of pgOptions.triggerFunctions.split(',')) {
@@ -26,19 +26,18 @@ try {
     }
     pgClient.on('notification', async (message) => {
       try {
-	payloadcopy = ""
-	logger.debug('Entering producer 2')
-	logger.debug(message)
+        payloadcopy = ""
+        logger.debug('Entering producer 2')
+        logger.debug(message)
         const payload = JSON.parse(message.payload)
-	
-	payloadcopy = message
+        payloadcopy = message
         const validTopicAndOriginator = (pgOptions.triggerTopics.includes(payload.topic)) && (pgOptions.triggerOriginators.includes(payload.originator)) // Check if valid topic and originator
         if (validTopicAndOriginator) {
           if (!isFailover) {
             //logger.info('trying to push on kafka topic')
-            await pushToKafka(payload)
+            await kafkaService.pushToKafka(payload)
             logger.info('Push to kafka and added for audit trail')
-	     audit(message)
+            audit(message)
           } else {
             logger.info('Push to dynamodb for reconciliation')
             await pushToDynamoDb(payload)
@@ -51,11 +50,11 @@ try {
       } catch (error) {
         logger.error('Could not parse message payload')
         logger.debug(`error-sync: producer parse message : "${error.message}"`)
-	const errmsg1 = `postgres-ifx-processor: producer or dd : Error Parse or payload : "${error.message}" \n payload : "${payloadcopy.payload}"`
-	logger.logFullError(error)
+        const errmsg1 = `postgres-ifx-processor: producer or dd : Error Parse or payload : "${error.message}" \n payload : "${payloadcopy.payload}"`
+        logger.logFullError(error)
         audit(error)
         // push to slack - alertIt("slack message"
-	await callposttoslack(errmsg1)
+        await callposttoslack(errmsg1)
       }
     })
     logger.info('pg-ifx-sync producer: Listening to pg-trigger channel.')
@@ -74,28 +73,32 @@ const terminate = () => process.exit()
 async function run() {
   logger.debug("Initialising producer setup...")
   await setupPgClient()
+  kafkaService.init().catch((e) => {
+    logger.error(`Kafka producer intialization error: "${e}"`)
+    terminate()
+  })
 }
 
 async function callposttoslack(slackmessage) {
-if(config.SLACK.SLACKNOTIFY === 'true') {
+  if (config.SLACK.SLACKNOTIFY === 'true') {
     return new Promise(function (resolve, reject) {
-	postMessage(slackmessage, (response) => {
-          console.log(`respnse : ${response}`)
-		if (response.statusCode < 400) {
-                logger.debug('Message posted successfully');
-                //callback(null);
-            } else if (response.statusCode < 500) {
-		const errmsg1 =`Slack Error: posting message to Slack API: ${response.statusCode} - ${response.statusMessage}`
-                logger.debug(`error-sync: ${errmsg1}`)
-            }
-		else {
-                logger.debug(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
-                //callback(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
-            }
-		resolve("done")
-	});
+      postMessage(slackmessage, (response) => {
+        console.log(`respnse : ${response}`)
+        if (response.statusCode < 400) {
+          logger.debug('Message posted successfully');
+          //callback(null);
+        } else if (response.statusCode < 500) {
+          const errmsg1 = `Slack Error: posting message to Slack API: ${response.statusCode} - ${response.statusMessage}`
+          logger.debug(`error-sync: ${errmsg1}`)
+        }
+        else {
+          logger.debug(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
+          //callback(`Server error when processing message: ${response.statusCode} - ${response.statusMessage}`);
+        }
+        resolve("done")
+      });
     }) //end
-}
+  }
 
 }
 // execute  
