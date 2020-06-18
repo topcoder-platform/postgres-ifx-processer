@@ -47,7 +47,7 @@ async function setupPgClient() {
           try {
 	     if (reconsiler_payload != ""){
 	     //original code
-              s_payload =  reconsiler_payload. 
+              var s_payload =  reconsiler_payload
                payload = JSON.parse(s_payload)
                payload1 = payload.payload
              // await pushToKafka(payload1) 
