@@ -46,12 +46,13 @@ async function setupPgClient() {
               }//column for loop
           try {
 	     if (reconsiler_payload != ""){
-             /*  s_payload =  reconsiler_payload. //original code
-               payload = JSON.parse(s_payload)
-               payload1 = payload.payload
-              await pushToKafka(payload1) */
+	     //original code
+             let s_payload =  reconsiler_payload. 
+             let  payload = JSON.parse(s_payload)
+             let  payload1 = payload.payload
+             // await pushToKafka(payload1) 
 		     
-		   let s_payload =  reconsiler_payload 
+		 /*  let s_payload =  reconsiler_payload 
 		   let s_payload1 = JSON.stringify(s_payload)
 		   let payload1
 		   let payload 
@@ -67,7 +68,7 @@ async function setupPgClient() {
 		    payload = JSON.parse(s_payload1)
 		    payload1 = payload
 		    console.log(payload1)
-		   }
+		   } */
 		//s_payload = JSON.stringify(s_payload)
 		//let payload = JSON.parse(s_payload)
                 //payload1 = payload.payload
