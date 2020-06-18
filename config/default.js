@@ -23,8 +23,8 @@ module.exports = {
     password: process.env.PG_PASSWORD || 'password',
     port: parseInt(process.env.PG_PORT, 10) || 5432,
 
-    triggerFunctions: process.env.TRIGGER_FUNCTIONS || 'dev_db_notifications', // List of trigger functions to listen to
-    triggerTopics: process.env.TRIGGER_TOPICS || ['dev.db.postgres.sync'], // Names of the topic in the trigger payload
+    triggerFunctions: process.env.TRIGGER_FUNCTIONS || 'test_db_notifications', // List of trigger functions to listen to
+    triggerTopics: process.env.TRIGGER_TOPICS || ['test.db.postgres.sync'], // Names of the topic in the trigger payload
     triggerOriginators: process.env.TRIGGER_ORIGINATORS || ['tc-postgres-delta-processor'] // Names of the originator in the trigger payload
   },
   KAFKA: { // Kafka connection options
@@ -39,7 +39,7 @@ module.exports = {
     errorTopic: process.env.ERROR_TOPIC || 'db.scorecardtable.error',
     recipients: ['admin@abc.com'], // Kafka partitions to use,
     KAFKA_URL: process.env.KAFKA_URL,
-    KAFKA_GROUP_ID: process.env.KAFKA_GROUP_ID || 'dev-postgres-ifx-consumer',
+    KAFKA_GROUP_ID: process.env.KAFKA_GROUP_ID || 'test-postgres-ifx-consumer',
     KAFKA_CLIENT_CERT: process.env.KAFKA_CLIENT_CERT ? process.env.KAFKA_CLIENT_CERT.replace('\\n', '\n') : null,
     KAFKA_CLIENT_CERT_KEY: process.env.KAFKA_CLIENT_CERT_KEY ? process.env.KAFKA_CLIENT_CERT_KEY.replace('\\n', '\n') : null,
   },
@@ -55,7 +55,7 @@ module.exports = {
   },
   DYNAMODB:
   {
-    DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'dev_pg_ifx_payload_sync',
+    DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'test_pg_ifx_payload_sync',
     DD_ElapsedTime: process.env.DD_ElapsedTime || 600000
   },
 

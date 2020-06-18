@@ -2,6 +2,7 @@ const config = require('config')
 const pg = require('pg')
 var AWS = require("aws-sdk");
 const logger = require('./common/logger')
+const kafkaService = require('./services/pushToDirectKafka')
 const pushToKafka = require('./services/pushToKafka')
 const pgOptions = config.get('POSTGRES')
 const postMessage = require('./services/posttoslack')
@@ -70,7 +71,8 @@ async function setupPgClient() {
 		//s_payload = JSON.stringify(s_payload)
 		//let payload = JSON.parse(s_payload)
                 //payload1 = payload.payload
-                 await pushToKafka(payload1) 
+                 //await pushToKafka(payload1) 
+		 await kafkaService.pushToKafka(payload1)
 		     
               logger.info('Reconsiler1 Push to kafka and added for audit trail')
              // await audit(s_payload,0) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
@@ -264,6 +266,10 @@ const terminate = () => process.exit()
 async function run() {
   logger.debug("Initialising Reconsiler1 setup...")
    await setupPgClient()
+   kafkaService.init().catch((e) => {
+   logger.error(`Kafka producer intialization error: "${e}"`)
+   terminate()
+    })
   //logger.debug("Initialising Reconsiler2 setup...")
   //callReconsiler2()
  // terminate()
