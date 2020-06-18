@@ -73,10 +73,13 @@ const terminate = () => process.exit()
 async function run() {
   logger.debug("Initialising producer setup...")
   await setupPgClient()
-  kafkaService.init().catch((e) => {
-    logger.error(`Kafka producer intialization error: "${e}"`)
-    terminate()
-  })
+  if (!isFailover) 
+  {
+      kafkaService.init().catch((e) => {
+      logger.error(`Kafka producer intialization error: "${e}"`)
+      terminate()
+      })
+  }
 }
 
 async function callposttoslack(slackmessage) {
