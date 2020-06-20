@@ -5,6 +5,7 @@ const pg = require('pg')
 var AWS = require("aws-sdk");
 const logger = require('./common/logger')
 const pushToKafka = require('./services/pushToKafka')
+const kafkaService = require('./services/pushToDirectKafka')
 const postMessage = require('./services/posttoslack')
 const auditTrail = require('./services/auditTrail');
 const pgOptions = config.get('POSTGRES')
@@ -57,11 +58,8 @@ function onScan(err, data) {
 		logger.info(`Checking for  : ${item.payloadseqid} ${payload1.table}` )   
                 logger.info(`retval : ${retval}` ) 
               if (retval === false && `"${payload1.table}"` !== "sync_test_id"){
-		//logger.info(`retval : ${retval} and  ${payload1.table}` )   
-               /* var s_payload =  (item.pl_document)
-                payload = s_payload
-                payload1 = (payload.payload)*/
-                await pushToKafka(item.pl_document)
+                //await pushToKafka(item.pl_document)
+		await kafkaService.pushToKafka(s_payload)
                 await audit(s_payload,1) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
                 logger.info(`Reconsiler2 Posted Payload : ${JSON.stringify(item.pl_document)}`)
 		logger.info(`Total push-to-kafka Count : ${total_pushtokafka}`)
@@ -126,30 +124,18 @@ async function verify_pg_record_exists(seqid)
 }
 
 async function audit(message,reconsileflag) {
-   var pl_producererr
-   if (reconsileflag === 1)
-   {
-    	const jsonpayload = (message)
-    	const payload = (jsonpayload.payload)
-    	pl_producererr= "Reconsiler2"
-    }else {
-    	const jsonpayload = JSON.parse(message)
-    	// payload = JSON.parse(jsonpayload.payload) //original
-	  payload = jsonpayload
-    	pl_producererr= "Reconsiler1"
-    }
-	  const pl_processid = 5555
-    //const jsonpayload = JSON.parse(message)
-    //payload = JSON.parse(jsonpayload.payload)
-    payload1 = (payload.payload)
+    var pl_producererr = "Reconsiler2"
+    const pl_processid = 5555
+    payload1 = (message.payload)
     const pl_seqid = payload1.payloadseqid
     const pl_topic = payload1.topic // TODO can move in config ?
     const pl_table = payload1.table
     const pl_uniquecolumn = payload1.Uniquecolumn
     const pl_operation = payload1.operation
     const pl_timestamp = payload1.timestamp
-    const pl_payload = JSON.stringify(message)
-	const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation} ${payload.timestamp}`
+    //const pl_payload = JSON.stringify(message)
+    const pl_payload = message
+    const logMessage = `${pl_seqid} ${pl_processid} ${pl_table} ${pl_uniquecolumn} ${pl_operation}`
     logger.debug(`${pl_producererr} : ${logMessage}`);
    await auditTrail([pl_seqid, pl_processid, pl_table, pl_uniquecolumn, pl_operation, "push-to-kafka", "", "", "Reconsiler2", pl_payload, new Date(), ""], 'producer')
 	return
@@ -184,6 +170,10 @@ async function run() {
   //logger.debug("Initialising Reconsiler1 setup...")
    //await setupPgClient()
   logger.debug("Initialising Reconsiler2 setup...")
+   kafkaService.init().catch((e) => {
+   logger.error(`Kafka producer intialization error: "${e}"`)
+   terminate()
+   })
   callReconsiler2()
  // terminate()
 }
