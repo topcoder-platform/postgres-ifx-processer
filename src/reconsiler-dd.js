@@ -73,7 +73,11 @@ function onScan(err, data) {
            params.ExclusiveStartKey = data.LastEvaluatedKey;
            docClient.scan(params, onScan);
        }
-	}
+	else
+      	{
+	    terminate() 
+      	}	   	
+     }
   catch (err) {
     const errmsg = `error-sync: Reconsiler2 : Error during dynamodb scan/kafka push: "${err.message}"`
     logger.error(errmsg)

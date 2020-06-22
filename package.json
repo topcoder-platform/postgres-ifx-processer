@@ -1,17 +1,18 @@
 {
   "name": "postgres_informix_updater",
   "version": "1.0.0",
-  "description": "Listens to DML triggers from the postgres database and updates the corresponding informix database",
+  "description": "Listens to DML triggers from the postgres database and updates  corresponding informix database",
   "scripts": {
     "test": "mocha ./test/*.test.js --exit",
     "lint": "standard --env mocha",
     "lint:fix": "standard --env mocha --fix",
     "producer": "node ./src/producer.js",
+    "producer_channel_2": "node ./src/producer.js",
     "consumer": "node ./src/consumer.js",
     "producer_dd": "node ./src/producer.js failover",
     "reconsiler1": "node ./src/reconsiler-audit.js",
     "reconsiler2": "node ./src/reconsiler-dd.js",
-    "start": "npm run producer & npm run producer_dd & npm run consumer & npm run reconsiler1 & npm run reconsiler2" 
+    "start": "npm run producer & npm run producer_dd & npm run consumer & npm run reconsiler1 & npm run reconsiler2 & npm run producer_channel_2" 
   },
   "author": "Topcoder",
   "license": "ISC",
