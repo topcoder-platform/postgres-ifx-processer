@@ -15,13 +15,6 @@ const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}
 const port = 3000
 //===============RECONSILER2 DYNAMODB CODE STARTS HERE ==========================
 
-async function callReconsiler2()
-{
-   console.log("inside 2");
-   await docClient.scan(params, onScan);
-   return
-}
-
 var docClient = new AWS.DynamoDB.DocumentClient({
     region: 'us-east-1',
     convertEmptyValues: true
@@ -39,7 +32,13 @@ ElapsedTime = config.DYNAMODB.DD_ElapsedTime
         ":time_2": Date.now()
     }
   }
-
+  
+async function callReconsiler2()
+{
+   console.log("inside 2");
+   await docClient.scan(params, onScan);
+   return
+}
 async function onScan(err, data) {
    if (err) {
        logger.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
