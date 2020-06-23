@@ -64,22 +64,23 @@ async function onScan(err, data) {
         logger.info(`retval : ${retval}`)
         if (retval === false && `"${payload1.table}"` !== "sync_test_id") {
           //await pushToKafka(item.pl_document)
+          logger.info(`Inside retval condition`)
           await kafkaService.pushToKafka(s_payload)
           await audit(s_payload, 1) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
           logger.info(`Reconsiler2 Posted Payload : ${JSON.stringify(item.pl_document)}`)
           logger.info(`Total push-to-kafka Count : ${total_pushtokafka}`)
           total_pushtokafka += 1
         }
-        total_dd_records += 1
+        logger.info(`after retval condition`)
       });
-      logger.info(`Reconsiler2 : count of total_dd_records  ${total_dd_records}`);
       if (typeof data.LastEvaluatedKey != "undefined") {
         console.log("Scanning for more...");
         params.ExclusiveStartKey = data.LastEvaluatedKey;
         await docClient.scan(params, onScan);
       }
       else {
-        terminate()
+        //terminate()
+        return
       }
     }
     catch (err) {
