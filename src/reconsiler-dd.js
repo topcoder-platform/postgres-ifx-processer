@@ -16,8 +16,10 @@ const port = 3000
 //===============RECONSILER2 DYNAMODB CODE STARTS HERE ==========================
 
 async function callReconsiler2()
-{console.log("inside 2");
-    docClient.scan(params, onScan);
+{
+   console.log("inside 2");
+   await docClient.scan(params, onScan);
+   return
 }
 
 var docClient = new AWS.DynamoDB.DocumentClient({
@@ -38,7 +40,7 @@ ElapsedTime = config.DYNAMODB.DD_ElapsedTime
     }
   }
 
-function onScan(err, data) {
+async function onScan(err, data) {
    if (err) {
        logger.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
 	terminate()
@@ -71,7 +73,7 @@ function onScan(err, data) {
        if (typeof data.LastEvaluatedKey != "undefined") {
            console.log("Scanning for more...");
            params.ExclusiveStartKey = data.LastEvaluatedKey;
-           docClient.scan(params, onScan);
+         await docClient.scan(params, onScan);
        }
 	else
       	{
@@ -117,7 +119,9 @@ async function verify_pg_record_exists(seqid)
 	    pgClient.end()
 	    pgClient = null
         })
-        })}
+        })
+	  return
+    }
     catch (err) {
     const errmsg = `error-sync: Reconsiler2 : Error in setting up postgres client: "${err.message}"`
     logger.error(errmsg)
