@@ -26,6 +26,7 @@ async function init() {
  * @param {Object} event the event to post
  */
 async function pushToKafka(event) {
+    logger.info("Enter in push to kafka")
     if (_.has(event, 'payload')) {
         // Post new structure
         const result = await producer.send({
