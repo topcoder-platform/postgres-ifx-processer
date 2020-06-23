@@ -46,8 +46,6 @@ async function onScan(err, data) {
   } else {
     try {
       console.log("Scan succeeded.");
-      let total_dd_records = 0;
-      let total_pushtokafka = 0;
       data.Items.forEach(async function (item) {
         //console.log(item.payloadseqid);
         let retval;
@@ -68,19 +66,19 @@ async function onScan(err, data) {
           await kafkaService.pushToKafka(s_payload)
           await audit(s_payload, 1) //0 flag means reconsiler 1. 1 flag reconsiler 2 i,e dynamodb
           logger.info(`Reconsiler2 Posted Payload : ${JSON.stringify(item.pl_document)}`)
-          logger.info(`Total push-to-kafka Count : ${total_pushtokafka}`)
-          total_pushtokafka += 1
         }
         logger.info(`after retval condition`)
       });
       if (typeof data.LastEvaluatedKey != "undefined") {
         console.log("Scanning for more...");
+       // logger.info(`params.ExclusiveStartKey : ${params.ExclusiveStartKey}`)
+       // logger.info(`data.LastEvaluatedKey: ${data.LastEvaluatedKey}`)
         params.ExclusiveStartKey = data.LastEvaluatedKey;
         await docClient.scan(params, onScan);
       }
       else {
-        //terminate()
-        return
+        terminate()
+        //return
       }
     }
     catch (err) {
@@ -100,7 +98,6 @@ async function verify_pg_record_exists(seqid) {
       var paramvalues = [seqid]
       let sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1)"
       logger.info(`sql and params : ${sql} ${paramvalues}`)
-      logger.info(`Going to execute sql execute`)
       pgClient.query(sql, paramvalues, (err, result) => {
         if (err) {
           var errmsg0 = `error-sync: Audit reconsiler2 query  "${err.message}"`
