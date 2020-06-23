@@ -5,7 +5,7 @@ const pg = require('pg')
 var AWS = require("aws-sdk");
 const logger = require('./common/logger')
 const pushToKafka = require('./services/pushToKafka')
-const kafkaService = require('./services/pushToDirectKafka-Reconsiler')
+const kafkaService = require('./services/pushToDirectKafka')
 const postMessage = require('./services/posttoslack')
 const auditTrail = require('./services/auditTrail');
 const pgOptions = config.get('POSTGRES')
@@ -77,8 +77,9 @@ async function onScan(err, data) {
         await docClient.scan(params, onScan);
       }
       else {
-        terminate()
+        //terminate()
         //return
+        logger.info("Need to terminate.")
       }
     }
     catch (err) {
