@@ -99,10 +99,12 @@ async function verify_pg_record_exists(seqid)
         sql = "select * from common_oltp.pgifx_sync_audit where pgifx_sync_audit.payloadseqid = ($1)"
 	 logger.info(`sql and params : ${sql} ${paramvalues}`)
               return new Promise(function (resolve, reject) {
+		  logger.info(`Going to execute sql execute`)
             	 pgClient.query(sql, paramvalues,  (err, result) => {
                 if (err) {
                     var errmsg0 = `error-sync: Audit reconsiler2 query  "${err.message}"`
-                    console.log(errmsg0)
+                    logger.error(errmsg0)
+		    reject(errmsg0);
                 }
                 else {
 		   logger.info(`Query result for ${paramvalues} : ${result.rowCount}`)
@@ -116,7 +118,6 @@ async function verify_pg_record_exists(seqid)
                     }
                 }
 	    pgClient.end()
-	    pgClient = null
         })
         })
 	  return
