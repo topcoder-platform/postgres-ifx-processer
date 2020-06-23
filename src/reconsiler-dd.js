@@ -46,7 +46,8 @@ async function onScan(err, data) {
   } else {
     try {
       console.log("Scan succeeded.");
-      data.Items.forEach(async function (item) {
+      await Promise.all(data.Items.map(async (items) => {
+    //  data.Items.forEach(async function (item) {
         //console.log(item.payloadseqid);
         let retval;
         try {
@@ -68,7 +69,7 @@ async function onScan(err, data) {
           logger.info(`Reconsiler2 Posted Payload : ${JSON.stringify(item.pl_document)}`)
         }
         logger.info(`after retval condition`)
-      });
+      }));
       if (typeof data.LastEvaluatedKey != "undefined") {
         console.log("Scanning for more...");
        // logger.info(`params.ExclusiveStartKey : ${params.ExclusiveStartKey}`)
