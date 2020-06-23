@@ -78,9 +78,10 @@ async function onScan(err, data) {
         await docClient.scan(params, onScan);
       }
       else {
-        //terminate()
-        //return
         logger.info("Need to terminate.")
+        terminate()
+        //return
+        
       }
     }
     catch (err) {
