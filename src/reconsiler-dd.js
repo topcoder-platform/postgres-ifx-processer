@@ -46,7 +46,7 @@ async function onScan(err, data) {
   } else {
     try {
       console.log("Scan succeeded.");
-      await Promise.all(data.Items.map(async (items) => {
+      await Promise.all(data.Items.map(async (item) => {
     //  data.Items.forEach(async function (item) {
         //console.log(item.payloadseqid);
         let retval;
