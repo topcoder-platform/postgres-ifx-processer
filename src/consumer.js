@@ -99,7 +99,7 @@ async function retrypushtokakfa(message, topic, m, partition) {
     if (message.payload.retryCount >= config.KAFKA.maxRetry) {
       logger.debug('Reached at max retry counter, sending it to error queue: ', config.KAFKA.errorTopic);
       logger.debug(`error-sync: consumer max-retry-limit reached`)
-      //await callposttoslack(`error-sync: postgres-ifx-processor : consumer max-retry-limit reached: "${message.payload.table}": payloadseqid : "${cs_payloadseqid}"`)
+      await callposttoslack(`error-sync: postgres-ifx-processor : consumer max-retry-limit reached: "${message.payload.table}": payloadseqid : "${cs_payloadseqid}"`)
       let notifiyMessage = Object.assign({}, message, { topic: config.KAFKA.errorTopic })
       notifiyMessage.payload['recipients'] = config.KAFKA.recipients
       logger.debug('pushing following message on kafka error alert queue:')
@@ -118,7 +118,7 @@ async function retrypushtokakfa(message, topic, m, partition) {
     const errmsg1 = `error-sync: postgres-ifx-processor: consumer : Error-republishing: "${err.message}"`
     logger.error(errmsg1)
     logger.debug(`error-sync: consumer re-publishing "${err.message}"`)
-    // await callposttoslack(errmsg1)
+     await callposttoslack(errmsg1)
   } finally {
     await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit success as will re-publish
   }
