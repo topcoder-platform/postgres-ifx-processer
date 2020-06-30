@@ -118,7 +118,7 @@ async function retrypushtokakfa(message, topic, m, partition) {
     const errmsg1 = `error-sync: postgres-ifx-processor: consumer : Error-republishing: "${err.message}"`
     logger.error(errmsg1)
     logger.debug(`error-sync: consumer re-publishing "${err.message}"`)
-     await callposttoslack(errmsg1)
+    await callposttoslack(errmsg1)
   } finally {
     await consumer.commitOffset({ topic, partition, offset: m.offset }) // Commit success as will re-publish
   }
