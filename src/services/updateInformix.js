@@ -3,7 +3,8 @@ const informix = require('../common/informixWrapper')
 const logger = require('../common/logger')
 
 String.prototype.escapeSpecialChars = function () {
-  return this.replace(/\n/g, "\\n");
+  return this.replace(/\n/g, "\\n")
+             .replace(/\r/g, "\\r");
 };
 
 async function updateInformix(payload) {
