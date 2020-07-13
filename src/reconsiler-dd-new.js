@@ -5,6 +5,7 @@ const pgOptions = config.get('POSTGRES')
 const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
 const pgClient = new pg.Client(pgConnectionString)
 const kafkaService = require('./services/pushToDirectKafka')
+const postMessage = require('./services/posttoslack')
 const pushToDynamoDb = require('./services/pushToDynamoDb')
 const auditTrail = require('./services/auditTrail');
 
@@ -26,8 +27,8 @@ async function setupPgClient() {
       rec_d_end = config.RECONSILER.RECONSILER_END
       rec_d_type = config.RECONSILER.RECONSILER_DURATION_TYPE
       var paramvalues = [rec_d_start,rec_d_end];
-      sql1 =  "select a.payloadseqid from producer_audit_dd a  where not exists (select from pgifx_sync_audit "
-      sql2 =  " where payloadseqid = a.payloadseqid) and a.auditdatetime "
+      sql1 =  "select a.payloadseqid from common_oltp.producer_audit_dd a  where not exists (select from common_oltp.pgifx_sync_audit "
+      sql2 =  " where pgifx_sync_audit.payloadseqid = a.payloadseqid) and a.auditdatetime "
       sql3 =  " between (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($1)"
       sql4 =  " and (timezone('utc',now())) - interval '1"+ rec_d_type + "' * ($2)"
 
