@@ -11,7 +11,7 @@
     "consumer": "node ./src/consumer.js",
     "producer_dd": "node ./src/producer.js failover",
     "reconsiler1": "node ./src/reconsiler-audit.js",
-    "reconsiler2": "node ./src/reconsiler-dd.js",
+    "reconsiler2": "node ./src/reconsiler-dd-new.js",
     "start": "npm run producer & npm run producer_dd & npm run consumer & npm run reconsiler1 & npm run reconsiler2 & npm run producer_channel_2" 
   },
   "author": "Topcoder",
