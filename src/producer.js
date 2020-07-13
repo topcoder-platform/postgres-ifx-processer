@@ -11,6 +11,7 @@ const postMessage = require('./services/posttoslack')
 const pgConnectionString = `postgresql://${pgOptions.user}:${pgOptions.password}@${pgOptions.host}:${pgOptions.port}/${pgOptions.database}`
 const pgClient = new pg.Client(pgConnectionString)
 const auditTrail = require('./services/auditTrail');
+const paudit_dd  = require('./services/producer_audit_dd')
 const express = require('express')
 const app = express()
 const port = 3000
@@ -41,6 +42,8 @@ async function setupPgClient() {
           } else {
             logger.info('Push to dynamodb for reconciliation')
             await pushToDynamoDb(payload)
+            logger.info('Push to producer_audit_dd for reconciliation')
+            await paudit_dd.pushToAuditDD(message)
           }
 
         } else {
