@@ -53,12 +53,14 @@ async function setupPgClient() {
         )).then(result => { if (typeof result.rows == "undefined") 
         {
             console.log("terminating after posting to kafka")
+            pgClient.end()
             process.exit(1)
         }
         })          
           }
           else { 
                 console.log("terminate due to 0 rows")
+                pgClient.end()
                 process.exit(1)
             }
         }
