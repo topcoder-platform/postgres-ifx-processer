@@ -54,14 +54,14 @@ async function setupPgClient() {
         {
             console.log("terminating after posting to kafka")
             pgClient.end()
-            process.exit(1)
+            terminate()
         }
         })          
           }
           else { 
                 console.log("terminate due to 0 rows")
                 pgClient.end()
-                process.exit(1)
+                terminate()
             }
         }
     })
