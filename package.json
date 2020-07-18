@@ -26,7 +26,7 @@
     "standard": "^13.1.0",
     "underscore": "^1.9.1",
     "winston": "^3.2.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "topcoder-bus-api-wrapper": "^1.0.1",
     "topcoder-healthcheck-dropin": "^1.0.3"
   },
