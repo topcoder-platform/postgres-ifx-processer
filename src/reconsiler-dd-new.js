@@ -47,7 +47,7 @@ async function setupPgClient() {
                 Promise.all(result.rows.map(async (row) => {
                 console.log(row.payloadseqid)     
                 const x  =  await calldynamodb(row.payloadseqid)
-                console.log("val of x",x)
+                console.log("val of x ",x)
             }   
         //))
         )).then(result => { if (typeof result.rows == "undefined") 
@@ -90,9 +90,10 @@ async function calldynamodb(payloadseqid)
     else {
         var s_payload = (data.Items[0].pl_document)
        // console.log("s_payload",s_payload)
+        logger.info(`Reconsiler2 Before Posting Payload : ${JSON.stringify(s_payload)}`)
         await kafkaService.pushToKafka(s_payload)
         await audit(s_payload, 1)
-        logger.info(`Reconsiler2 Posted Payload : ${s_payload}`)
+        logger.info(`Reconsiler2 Payload posted`)
     };
     resolve("done"); 
   }); 
