@@ -5,7 +5,6 @@ const config = require('config')
 const Kafka = require('no-kafka')
 const logger = require('./common/logger')
 const updateInformix = require('./services/updateInformix')
-const pushToKafka = require('./services/pushToKafka')
 const healthcheck = require('topcoder-healthcheck-dropin');
 const auditTrail = require('./services/auditTrail');
 const kafkaOptions = config.get('KAFKA')
@@ -163,6 +162,10 @@ async function setupKafkaConsumer() {
     await consumer.init(strategies)
     logger.info('Initialized kafka consumer')
     healthcheck.init([check])
+    kafkaService.init().catch((e) => {
+      logger.error(`Kafka producer intialization error: "${e}"`)
+      terminate()
+    })
   } catch (err) {
     logger.error('Could not setup kafka consumer')
     logger.logFullError(err)
