@@ -4,7 +4,7 @@ const logger = require('../common/logger')
 
 String.prototype.escapeSpecialChars = function () {
   return this.replace(/\n/g, "\\n")
-             .replace(/\r/g, "\\r");
+    .replace(/\r/g, "\\r");
 };
 
 async function updateInformix(payload) {
@@ -45,6 +45,7 @@ async function updateInformix(payload) {
   t0.forEach((name, index) => t0[index] = `${name.escapeSpecialChars()}`);
   //logger.debug(`Param values : ${t0}`);
   let temp1 = "[" + `${t0}` + "]"
+  logger.debug(`preparing json before parsing: ${temp1}`)
   let finalparam = JSON.parse(temp1)
 
   /*console.log(`Typeof finalparam : ${typeof(finalparam)}`)
