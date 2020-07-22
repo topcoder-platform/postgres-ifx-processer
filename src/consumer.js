@@ -10,6 +10,8 @@ const healthcheck = require('topcoder-healthcheck-dropin');
 const auditTrail = require('./services/auditTrail');
 const kafkaOptions = config.get('KAFKA')
 const postMessage = require('./services/posttoslack')
+const kafkaService = require('./services/pushToDirectKafka')
+
 //const isSslEnabled = kafkaOptions.SSL && kafkaOptions.SSL.cert && kafkaOptions.SSL.key
 
 const options = {
@@ -50,7 +52,7 @@ async function dataHandler(messageSet, topic, partition) {
     let message
     let ifxstatus = 0
     try {
-  // let ifxstatus = 0
+      // let ifxstatus = 0
       let cs_payloadseqid;
       message = JSON.parse(m.message.value)
       //logger.debug(`Consumer Received from kafka :${JSON.stringify(message)}`)
@@ -58,17 +60,17 @@ async function dataHandler(messageSet, topic, partition) {
       logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
       //await updateInformix(message)
       ifxstatus = await updateInformix(message)
-     // if (ifxstatus === 0 && `${message.payload.operation}` === 'INSERT') {
-     //   logger.debug(`operation : ${message.payload.operation}`)
-    //    logger.debug(`Consumer :informixt status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus} - Retrying`)
-       // auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
-       //   message.payload.operation, "push-to-kafka", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')
+      // if (ifxstatus === 0 && `${message.payload.operation}` === 'INSERT') {
+      //   logger.debug(`operation : ${message.payload.operation}`)
+      //    logger.debug(`Consumer :informixt status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus} - Retrying`)
+      // auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
+      //   message.payload.operation, "push-to-kafka", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')
       //  await retrypushtokakfa(message, topic, m, partition)
       //} else {
-        logger.debug(`Consumer :informix status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
-        if (message.payload['retryCount']) retryvar = message.payload.retryCount;
-        await auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
-          message.payload.operation, "Informix-updated", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')       
+      logger.debug(`Consumer :informix status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
+      if (message.payload['retryCount']) retryvar = message.payload.retryCount;
+      await auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
+        message.payload.operation, "Informix-updated", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')
       //}
     } catch (err) {
       logger.debug(`Consumer:ifx return status error for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
@@ -104,11 +106,13 @@ async function retrypushtokakfa(message, topic, m, partition) {
       notifiyMessage.payload['recipients'] = config.KAFKA.recipients
       logger.debug('pushing following message on kafka error alert queue:')
       //retry push to error topic kafka again
-      await pushToKafka(notifiyMessage)
+      //await pushToKafka(notifiyMessage)
+      await kafkaService.pushToKafka(notifiyMessage)
       return
     }
     message.payload['retryCount'] = message.payload.retryCount + 1;
-    await pushToKafka(message)
+    //await pushToKafka(message)
+    kafkaService.pushToKafka(message)
     var errmsg9 = `consumer : Retry for Kafka push : retrycount : "${message.payload.retryCount}" : "${cs_payloadseqid}"`
     logger.debug(errmsg9)
   }
