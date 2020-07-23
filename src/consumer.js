@@ -155,7 +155,7 @@ async function setupKafkaConsumer() {
     await consumer.init(strategies)
     logger.info('Initialized kafka consumer')
     healthcheck.init([check])
-    kafkaService.init().catch((e) => {
+    kafkaService.init().catch(async (e) => {
       logger.error(`Kafka producer intialization error: "${e}"`)
       await callposttoslack(`error-sync: postgres-ifx-processor : consumer Kafka producer intialization : ${e}`)
       terminate()
