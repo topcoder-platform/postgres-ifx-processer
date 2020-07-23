@@ -59,13 +59,6 @@ async function dataHandler(messageSet, topic, partition) {
       logger.debug(`consumer : ${message.payload.payloadseqid} ${message.payload.table} ${message.payload.Uniquecolumn} ${message.payload.operation} ${message.timestamp} `);
       //await updateInformix(message)
       ifxstatus = await updateInformix(message)
-      // if (ifxstatus === 0 && `${message.payload.operation}` === 'INSERT') {
-      //   logger.debug(`operation : ${message.payload.operation}`)
-      //    logger.debug(`Consumer :informixt status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus} - Retrying`)
-      // auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
-      //   message.payload.operation, "push-to-kafka", retryvar, "", "", JSON.stringify(message), new Date(), message.topic], 'consumer')
-      //  await retrypushtokakfa(message, topic, m, partition)
-      //} else {
       logger.debug(`Consumer :informix status for ${message.payload.table} ${message.payload.payloadseqid} : ${ifxstatus}`)
       if (message.payload['retryCount']) retryvar = message.payload.retryCount;
       await auditTrail([cs_payloadseqid, cs_processId, message.payload.table, message.payload.Uniquecolumn,
@@ -164,12 +157,14 @@ async function setupKafkaConsumer() {
     healthcheck.init([check])
     kafkaService.init().catch((e) => {
       logger.error(`Kafka producer intialization error: "${e}"`)
+      await callposttoslack(`error-sync: postgres-ifx-processor : consumer Kafka producer intialization : ${e}`)
       terminate()
     })
   } catch (err) {
     logger.error('Could not setup kafka consumer')
     logger.logFullError(err)
     logger.debug(`error-sync: consumer kafka-setup "${err.message}"`)
+    await callposttoslack(`error-sync: postgres-ifx-processor : consumer kafka-setup : ${err.message}`)
     terminate()
   }
 }
