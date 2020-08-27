@@ -7,7 +7,7 @@ String.prototype.escapeSpecialChars = function () {
     .replace(/\r/g, "\\r")
     .replace(/\t/g, "\\t")
     .replace(/\f/g, "\\f")
-    .replace("/\/g", "\\");
+    .replace("/\/g", "\");
 };
 
 async function updateInformix(payload) {
