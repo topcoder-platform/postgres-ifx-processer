@@ -3,11 +3,16 @@ const informix = require('../common/informixWrapper')
 const logger = require('../common/logger')
 
 String.prototype.escapeSpecialChars = function () {
-  return this.replace(/\n/g, "\\n")
+/*  return this.replace(/\n/g, "\\n")
     .replace(/\r/g, "\\r")
     .replace(/\t/g, "\\t")
     .replace(/\f/g, "\\f");
-   // .replace(/\\/g, "\\\\");
+   // .replace(/\\/g, "\\\\"); */
+   return this.replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t")
+    .replace(/\f/g, "\\f");
 };
 
 async function updateInformix(payload) {
