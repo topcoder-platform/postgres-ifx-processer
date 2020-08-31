@@ -8,7 +8,7 @@
     "lint:fix": "standard --env mocha --fix",
     "producer": "node ./src/producer.js",
     "producer_channel_2": "node ./src/producer.js",
-    "consumer": "node ./src/consumer.js",
+    "consumer": "nodemon ./src/consumer.js",
     "producer_dd": "node ./src/producer.js failover",
     "reconsiler1": "node ./src/reconsiler-audit.js",
     "reconsiler2": "node ./src/reconsiler-dd-new.js",
@@ -28,6 +28,7 @@
     "winston": "^3.2.1",
     "lodash": "^4.17.15",
     "topcoder-bus-api-wrapper": "^1.0.1",
+    "nodemon": "latest",
     "topcoder-healthcheck-dropin": "^1.0.3"
   },
   "devDependencies": {
