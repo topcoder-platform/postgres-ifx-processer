@@ -9,8 +9,8 @@ String.prototype.escapeSpecialChars = function () {
     .replace(/\f/g, "\\f");
    // .replace(/\\/g, "\\\\"); */
 
-   return this.replace(/\\/g, "\\\\")
-    .replace(/\\"/g, '\\\"')
+   return this.replace(/\\/g, "\\\")
+    //.replace(/\\"/g, '\\\"')
     .replace(/\n/g, "\\n")
     .replace(/\r/g, "\\r")
     .replace(/\t/g, "\\t")
