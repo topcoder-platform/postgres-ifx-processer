@@ -44,7 +44,6 @@ build_steps: &build_steps
             ./awsconfiguration.sh ${DEPLOY_ENV}
             source awsenvconf
             
-
             #scorecard test consumer remove later
             #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-consumer_scorecard-deployvar
             #source buildenvvar
