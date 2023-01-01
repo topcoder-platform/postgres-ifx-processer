@@ -18,7 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "*",
-    "config": "^3.2.2",
+    "config": "^3.3.8",
     "informix-wrapper": "git+https://github.com/appirio-tech/informix-wrapper.git#prepare_stmt_fix",
     "no-kafka": "^3.4.3",
     "pg": "^7.12.1",
