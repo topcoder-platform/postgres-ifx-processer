@@ -6,7 +6,7 @@
     "test": "mocha ./test/*.test.js --exit",
     "lint": "standard --env mocha",
     "lint:fix": "standard --env mocha --fix",
-    "producer": "node --max-old-space-size=4096 ./src/producer.js",
+    "producer": "node ./src/producer.js",
     "producer_channel_2": "node ./src/producer.js",
     "consumer": "node ./src/consumer.js",
     "producer_dd": "node ./src/producer.js failover",
