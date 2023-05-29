@@ -15,7 +15,7 @@ install_deploysuite: &install_deploysuite
           name: Installation of install_deploysuite.
           #Git Clone -change back to v1.3 or latest once counter var is generalized.
           command: |
-            git clone --branch master https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript    
+            git clone --branch v1.4.15 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript    
             cp ./../buildscript/master_deploy.sh .
             cp ./../buildscript/buildenv.sh .
             cp ./../buildscript/awsconfiguration.sh .
@@ -56,9 +56,9 @@ build_steps: &build_steps
             #source buildenvvar
             #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
 
-            #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar
-            #source buildenvvar
-            #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
+            ./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar
+            source buildenvvar
+            ./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
             
             echo "Running Masterscript - deploy postgres-ifx-processer producer"
             if [ -e ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json; fi
@@ -67,17 +67,17 @@ build_steps: &build_steps
             ./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
            
             #Producer second channel
-            #echo "Running Masterscript - deploy postgres-ifx-processer Producer second channel"
-            #if [ -e ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-consumer-deployvar.json; fi
-            #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-producer-chnl_2-deployvar
-            #source buildenvvar
-            #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar_chnl_2 -i postgres-ifx-processer
+            echo "Running Masterscript - deploy postgres-ifx-processer Producer second channel"
+            if [ -e ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar.json; fi
+            ./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-producer-chnl_2-deployvar
+            source buildenvvar
+            ./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar_chnl_2 -i postgres-ifx-processer
 
-            #echo "Running Masterscript - deploy postgres-ifx-processer producer_dd"
-            #if [ -e ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-producer-deployvar.json; fi
-            #./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-producer_dd-deployvar
-            #source buildenvvar
-            #./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
+            echo "Running Masterscript - deploy postgres-ifx-processer producer_dd"
+            if [ -e ${LOGICAL_ENV}-${APP_NAME}-producer-chnl_2-deployvar.json ]; then  sudo rm -vf ${LOGICAL_ENV}-${APP_NAME}-producer-chnl_2-deployvar.json; fi
+            ./buildenv.sh -e ${DEPLOY_ENV} -b ${LOGICAL_ENV}-${APP_NAME}-producer_dd-deployvar
+            source buildenvvar
+            ./master_deploy.sh -d ECS -e ${DEPLOY_ENV} -t latest -s ${GLOBAL_ENV}-global-appvar,${LOGICAL_ENV}-${APP_NAME}-appvar -i postgres-ifx-processer
 
 
             #echo "Running Masterscript - deploy postgres-ifx-processer reconsiler1"
