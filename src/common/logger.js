@@ -15,11 +15,14 @@ const logger = createLogger({
     new transports.Console({ // Log to console
       stderrLevels: ['error'],
       level: config.get('LOG_LEVEL')
-    }),
+    })
+  /*
+    ,
     new transports.File({ // Log to file
       filename: config.get('LOG_FILE'),
       level: config.get('LOG_LEVEL')
     })
+  */
   ]
 })
 
