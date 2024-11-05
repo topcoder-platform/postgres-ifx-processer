@@ -21,7 +21,7 @@
     "config": "^3.2.2",
     "informix-wrapper": "git+https://github.com/appirio-tech/informix-wrapper.git#prepare_stmt_fix",
     "no-kafka": "^3.4.3",
-    "pg": "^7.12.1",
+    "pg": "^8.13.1",
     "sleep": "^6.1.0",
     "standard": "^13.1.0",
     "underscore": "^1.9.1",
