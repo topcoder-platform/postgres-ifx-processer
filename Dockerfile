@@ -1,4 +1,4 @@
-FROM openjdk:11.0.3-jdk-stretch
+FROM openjdk:11.0.4-jdk-stretch
 
 RUN sed -i '/stretch-updates/d' /etc/apt/sources.list
 RUN sed -i 's/security.debian/archive.debian/' /etc/apt/sources.list
